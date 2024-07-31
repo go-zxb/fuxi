@@ -1,0 +1,25 @@
+package main
+
+import (
+	"fmt"
+	"{{.ModuleName}}/core"
+	"github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+	Use:     "{{.ProjectName}}",
+	Short:   "{{.ProjectName}}",
+	Long:    "{{.ProjectName}}",
+	Version: "0.0.1",
+}
+
+func init() {
+	rootCmd.AddCommand(core.GinServerCmd)
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		return
+	}
+}

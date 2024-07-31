@@ -1,0 +1,32 @@
+system:
+  name: "{{.ProjectName}}"
+  version: "{{.Version}}"
+  description: "A sample application"
+
+gin:
+  mode: "release"
+  host: "0.0.0.0"
+  port: 8081
+  debug: false
+
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "{{.ProjectName}}"
+  password: "{{.ProjectName}}"
+  database: "{{.ProjectName}}"
+  max_idle_conns: 10
+  max_open_conns: 100
+  Log_level: 4
+  charset: "utf8mb4"
+  parse_time: true
+  time_zone: "Asia%2fShanghai"
+  colorful: true
+  ignore_record_not_found_error: false
+  parameterized_queries: false
+
+
+jwt:
+  secret_key: "mysecretkey"
+  expiration_seconds: 3600
+  issuer: "myapp"

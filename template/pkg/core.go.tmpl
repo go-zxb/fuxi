@@ -1,0 +1,74 @@
+package core
+
+import (
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/cobra"
+	"{{.ModuleName}}/config"
+	"{{.ModuleName}}/middleware"
+	"{{.ModuleName}}/core/data"
+	"log"
+)
+
+var GinServerCmd = &cobra.Command{
+	Use:   "server",
+	Short: "server",
+	Long:  "server",
+	Run:   Start,
+}
+
+var configPath string
+
+func init() {
+	GinServerCmd.Flags().StringVarP(&configPath, "config", "c", "config/config.yaml", "config file path")
+}
+
+type App struct {}
+
+func NewApp() *App {
+	return &App{}
+}
+
+// 初始化配置
+func (a *App) initConf() *GinServer {
+  // 初始化配置
+	c, err := config.NewConfig(configPath)
+	if err != nil {
+		log.Fatalln("❎ 初始化配置失败:",err)
+	}
+	//初始化数据库
+	_,err = data.InitMysql(*c)
+  if err != nil {
+    log.Fatalln("❎ 初始化MySQL数据库失败:",err)
+  }
+  log.Println("✅ 初始化MySQL成功🆗")
+  //初始化redis
+  	_, err = data.InitRedis(*c)
+  	if err != nil {
+  		log.Fatalln("❎ 初始化redis失败:", err)
+  	}
+  	log.Println("✅ 初始化Redis成功🆗")
+  return &GinServer{c: c}
+}
+
+type GinServer struct {
+	c *config.Config
+}
+
+// 启动服务
+func (d *GinServer) initGinServer()  {
+	engine := gin.Default()
+	engine.Use(middleware.Cors())
+	InitRouter(engine)
+	if err := engine.Run(fmt.Sprintf("%s:%d", d.c.Gin.Host, d.c.Gin.Port));err != nil {
+  		log.Fatalln("❎ 服务启动失败:", err)
+  	}
+}
+
+func InitRouter(engine *gin.Engine) {
+
+}
+
+func Start(cmd *cobra.Command, args []string) {
+	NewApp().initConf().initGinServer()
+}

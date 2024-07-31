@@ -1,0 +1,569 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "{{.ModuleName}}",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/{{.StructName}}s/{id}": {
+      "get": {
+        "summary": "获取{{.StructName}}信息",
+        "x-apifox-folder": "",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "{{.StructName}} id to get",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "header",
+            "description": "",
+            "example": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMzM5MDgzMDE4Mjc4NTMxMDcyIiwidXNlck5hbWUiOiI4MDAxMiIsImV4cCI6MTcwNDM3MjE1NX0.gYmQcXPjXP66uNzhUIUtzcP-N9w3ltWc0SUI_phYrCM",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                  },
+                  "required": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-orders": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-ignore-properties": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "code": 200,
+                      "success": true,
+                      "message": "成功",
+                      "data": {},
+                      "time": 1721742256123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "请求有误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "异常示例",
+                    "value": {
+                      "code": 400,
+                      "success": false,
+                      "message": "record not found",
+                      "time": 1721742352496
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "",
+        "security": []
+      },
+      "delete": {
+        "summary": "删除{{.StructName}}",
+        "x-apifox-folder": "",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "{{.StructName}} id to delete",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "header",
+            "description": "",
+            "example": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMzM5MDgzMDE4Mjc4NTMxMDcyIiwidXNlck5hbWUiOiI4MDAxMiIsImV4cCI6MTcwNDM3MjE1NX0.gYmQcXPjXP66uNzhUIUtzcP-N9w3ltWc0SUI_phYrCM",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                  },
+                  "required": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-orders": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-ignore-properties": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "code": 200,
+                      "success": true,
+                      "message": "成功",
+                      "data": {},
+                      "time": 1721742256123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "请求有误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "异常示例",
+                    "value": {
+                      "code": 400,
+                      "success": false,
+                      "message": "record not found",
+                      "time": 1721742352496
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "",
+        "security": []
+      }
+    },
+    "/{{.StructName}}s": {
+      "get": {
+        "summary": "获取{{.StructName}}列表",
+        "x-apifox-folder": "",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+        {
+        "name": "uid",
+         "in": "query",
+         "description": "用户uid",
+         "required": true,
+         "example": "G9D3JS4K7bDS2Dl7HS",
+         "schema": {
+           "type": "string"
+         }
+     },
+     {
+             "name": "page",
+              "in": "query",
+              "description": "页码",
+              "required": true,
+              "example": "1",
+              "schema": {
+                "type": "number"
+              }
+          },
+          {
+                  "name": "pageSize",
+                   "in": "query",
+                   "description": "页大小",
+                   "required": true,
+                   "example": "20",
+                   "schema": {
+                     "type": "number"
+                   }
+               },
+               {{range  .Data}}
+        {
+           "name": "{{.Name}}",
+            "in": "query",
+            "description": "{{.Description}}",
+            "required": false,
+            "example": "{{.Value}}",
+            "schema": {
+              "type": "{{.StructType | openapi}}"
+            }
+        },{{end}}
+          {
+            "name": "token",
+            "in": "header",
+            "description": "",
+            "example": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMzM5MDgzMDE4Mjc4NTMxMDcyIiwidXNlck5hbWUiOiI4MDAxMiIsImV4cCI6MTcwNDM3MjE1NX0.gYmQcXPjXP66uNzhUIUtzcP-N9w3ltWc0SUI_phYrCM",
+            "schema": {
+              "type": "string"
+            }
+          }
+          ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                  },
+                  "required": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-orders": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-ignore-properties": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "code": 200,
+                      "success": true,
+                      "message": "成功",
+                      "data": [],
+                      "time": 1721742256123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "请求有误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "异常示例",
+                    "value": {
+                      "code": 400,
+                      "success": false,
+                      "message": "record not found",
+                      "time": 1721742352496
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "",
+        "security": []
+      },
+      "post": {
+        "summary": "创建{{.StructName}}",
+        "x-apifox-folder": "",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "header",
+            "description": "",
+            "example": "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMzM5MDgzMDE4Mjc4NTMxMDcyIiwidXNlck5hbWUiOiI4MDAxMiIsImV4cCI6MTcwNDM3MjE1NX0.gYmQcXPjXP66uNzhUIUtzcP-N9w3ltWc0SUI_phYrCM",
+            "schema": {
+              "type": "string"
+            }
+          }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uid": {
+                    "type": "string",
+                    "description": "用户UID",
+                    "example": "G9D3JS4K7bDS2Dl7HS"
+                  },{{range $index, $data := .Data}}
+                  "{{$data.Name}}": {
+                    "type": "{{$data.StructType | openapi}}",
+                    "description": "{{.Description}}",
+                    "example": "{{.Value}}"
+                  }{{if not (isLast $index (len $.Data))}},{{end}}{{end}}
+                },
+                "x-apifox-orders": [
+                "uid",{{range $index, $data := .Data}}
+                "{{$data.Name}}"{{if not (isLast $index (len $.Data))}},{{end}}{{end}}
+                ],
+                "required": [
+                "uid",{{range $index, $data := .Data}}
+               "{{$data.Name}}"{{if not (isLast $index (len $.Data))}},{{end}}{{end}}
+                ],
+                "x-apifox-ignore-properties": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                  },
+                  "required": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-orders": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-ignore-properties": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "code": 200,
+                      "success": true,
+                      "message": "成功",
+                      "time": 1721742256123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "请求有误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "异常示例",
+                    "value": {
+                      "code": 400,
+                      "success": false,
+                      "message": "error",
+                      "time": 1721742352496
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "",
+        "security": []
+      },
+      "put": {
+        "summary": "更新{{.StructName}}信息",
+        "x-apifox-folder": "",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uid": {
+                  "type": "string",
+                  "description": "用户UID",
+                  "example": "G9D3JS4K7bDS2Dl7HS"
+                  },{{range $index, $data := .Data}}
+                "{{$data.Name}}": {
+                  "type": "{{$data.StructType | openapi}}",
+                  "description": "{{.Description}}",
+                  "example": "{{.Value}}"
+                }{{if not (isLast $index (len $.Data))}},{{end}}{{end}}
+                },
+                "x-apifox-orders": [
+                  "uid",{{range $index, $data := .Data}}
+                  "{{$data.Name}}"{{if not (isLast $index (len $.Data))}},{{end}}{{end}}
+                ],
+                "required": [
+                  "uid",{{range $index, $data := .Data}}
+               "{{$data.Name}}"{{if not (isLast $index (len $.Data))}},{{end}}{{end}}
+                ],
+                "x-apifox-ignore-properties": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                  },
+                  "required": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-orders": [
+                    "code",
+                    "success",
+                    "message",
+                    "data",
+                    "time"
+                  ],
+                  "x-apifox-ignore-properties": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "code": 200,
+                      "success": true,
+                      "message": "成功",
+                      "time": 1721742256123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "请求有误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "异常示例",
+                    "value": {
+                      "code": 400,
+                      "success": false,
+                      "message": "error",
+                      "time": 1721742352496
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "",
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "securitySchemes": {}
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080/api/v1",
+      "description": "开发环境"
+    },
+    {
+      "url": "http://127.0.0.1:8081/api/v1",
+      "description": "测试环境"
+    },
+    {
+      "url": "http://127.0.0.1:8082/api/v1",
+      "description": "生产环境"
+    }
+  ]
+}

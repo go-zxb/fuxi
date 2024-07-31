@@ -1,0 +1,64 @@
+package repo
+
+import (
+  "gorm.io/gen"
+	model "{{.ModuleName}}/internal/model/{{.StructName}}"
+	"{{.ModuleName}}/internal/model/{{.StructName}}/query"
+	service "{{.ModuleName}}/internal/service/{{.StructName}}"
+)
+
+type {{.StructName | initialLetter}}Repo struct {
+	Q *query.Query
+}
+
+func New{{.StructName | initialLetter}}Repo() service.{{.StructName | initialLetter}}RepoInterface {
+	return &{{.StructName | initialLetter}}Repo{Q: query.Q}
+}
+
+// Create{{.StructName | initialLetter}} 创建{{.StructName}}
+func (r *{{.StructName | initialLetter}}Repo) Create{{.StructName | initialLetter}}({{.StructName}} *model.{{.StructName | initialLetter}}) error {
+	Q := r.Q.{{.StructName | initialLetter}}
+	return Q.Create({{.StructName}})
+}
+
+// Get{{.StructName | initialLetter}} 获取{{.StructName}}ByID
+func (r *{{.StructName | initialLetter}}Repo) Get{{.StructName | initialLetter}}(id uint) (*model.{{.StructName | initialLetter}}, error) {
+	Q := r.Q.{{.StructName | initialLetter}}
+	return Q.Where(Q.ID.Eq(id)).First()
+}
+
+// Get{{.StructName | initialLetter}}List 获取{{.StructName}}列表
+func (r *{{.StructName | initialLetter}}Repo) Get{{.StructName | initialLetter}}List(query *model.{{.StructName | initialLetter}}Query) ([]*model.{{.StructName | initialLetter}}, error) {
+	Q := r.Q.{{.StructName | initialLetter}}
+	q := Q.Where(Q.UID.Eq(query.UID))
+
+  {{range .Data}}
+  {{if eq .StructType "time.Time"}}{{else}}
+  if query.{{.Name | initialLetter}} != {{if eq .StructType "string"}}""{{else}}0{{end}} {
+      q = q.Where(Q.{{.Name | initialLetter}}.Eq(query.{{.Name | initialLetter}}))
+    }
+  {{end}}{{end}}
+
+  if query.Page <= 0 {
+    		query.Page = 1
+  }
+
+  if query.PageSize <= 0 || query.PageSize >= 100 {
+    query.PageSize = 20
+  }
+
+  q = q.Limit(query.PageSize).Offset((query.Page - 1) * query.PageSize)
+	return q.Find()
+}
+
+// Update{{.StructName | initialLetter}} 更新{{.StructName}}
+func (r *{{.StructName | initialLetter}}Repo) Update{{.StructName | initialLetter}}({{.StructName}} *model.{{.StructName | initialLetter}}) (gen.ResultInfo, error) {
+	Q := r.Q.{{.StructName | initialLetter}}
+	return Q.Where(Q.ID.Eq({{.StructName}}.ID)).Updates({{.StructName}})
+}
+
+// Delete{{.StructName | initialLetter}} 删除{{.StructName}}
+func (r *{{.StructName | initialLetter}}Repo) Delete{{.StructName | initialLetter}}(id uint) (gen.ResultInfo, error) {
+	Q := r.Q.{{.StructName | initialLetter}}
+	return Q.Where(Q.ID.Eq(id)).Delete()
+}

@@ -1,0 +1,68 @@
+system:
+  name: "fuxi"
+  version: "v0.0.1"
+  description: "A sample application"
+
+gin:
+  mode: "release"
+  host: "0.0.0.0"
+  port: 8081
+  debug: false
+
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "great"
+  password: "great"
+  database: "great"
+  max_idle_conns: 10
+  max_open_conns: 100
+  Log_level: 4
+  charset: "utf8mb4"
+  parse_time: true
+  time_zone: "Asia%2fShanghai"
+  colorful: true
+  ignore_record_not_found_error: false
+  parameterized_queries: false
+
+
+jwt:
+  secret_key: "mysecretkey"
+  expiration_seconds: 3600
+  issuer: "myapp"
+
+gpt:
+  chat_gpt_platform: "deepSeek"
+  temperature: 0.3
+  kimi:
+    model: "moonshot-v1-8k"
+    api_key: "sk-yourkey"
+    base_url: "https://api.moonshot.cn/v1/chat/completions"
+  deep_seek:
+    model: "deepseek-coder"
+    api_key: "sk-yourkey"
+    base_url: "https://api.deepseek.com/chat/completions"
+  prompt: |
+      "用户的问题都是各种数据库设计,你要根据问题尽可能的给出可能用得到的数据字段,你需要按照需要输出Golang结构体的字段信息,字段名称,字段类型,字段tag(只要字段名称),数据库字段tag等, 以JSON格式输出。
+      EXAMPLE INPUT: 
+        帮我设计一个用户系统.
+        EXAMPLE JSON OUTPUT:
+        {"fields":[{
+          "name": "status",
+          "structType": "uint",
+          sqlType"": "bigint",
+          length"": "1",
+          "structTag": "status",
+          "sqlTag": "status",
+          "description": "状态",
+          "value": "0"
+        },{
+          "name": "username",
+          "structType": "string",
+          sqlType"": "varchar(191)",
+          length"": "191",
+          "structTag": "username",
+          "sqlTag": "user_name",
+          "description": "用户名",
+          "value": "张三"
+        }],"structName":"user","table":"users","desc":"用300字介绍该系统模块的功能"}"

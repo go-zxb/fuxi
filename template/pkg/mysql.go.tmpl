@@ -1,0 +1,78 @@
+package data
+
+import (
+	"errors"
+	"fmt"
+	"{{.ModuleName}}/config"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm"
+	"log"
+	"os"
+	"time"
+)
+
+var db *gorm.DB
+
+func GetDB() *gorm.DB {
+	return db
+}
+
+func InitMysql(conf config.Config) (*gorm.DB, error) {
+	out := &os.File{}
+	out = os.Stdout
+	newLogger := logger.New(
+		log.New(out, "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
+		logger.Config{
+			SlowThreshold:             200 * time.Millisecond,               // 慢 SQL 阈值
+			LogLevel:                  logger.LogLevel(conf.Mysql.LogLevel), // 日志级别
+			IgnoreRecordNotFoundError: true,                                 // 忽略ErrRecordNotFound（记录未找到）错误
+			Colorful:                  conf.Mysql.Colorful,                  // 禁用彩色打印
+		},
+	)
+
+	//great:great@tcp(127.0.0.1:3306)/great?charset=utf8mb4&parseTime=true&loc=Asia/Shanghai
+	dns := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%v&loc=%s",
+		conf.Mysql.User,
+		conf.Mysql.Password,
+		conf.Mysql.Host,
+		conf.Mysql.Port,
+		conf.Mysql.Database,
+		conf.Mysql.Charset,
+		conf.Mysql.ParseTime,
+		conf.Mysql.TimeZone,
+	)
+	mysqlConfig := mysql.Config{
+		DSN:                       dns,   // DSN data source name
+		DefaultStringSize:         191,   // string 类型字段的默认长度
+		DisableDatetimePrecision:  false, // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
+		DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
+		DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
+		SkipInitializeWithVersion: false, // 根据版本自动配置
+	}
+	gormDB, err := gorm.Open(mysql.New(mysqlConfig), &gorm.Config{Logger: newLogger})
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	sqlDB, _ := gormDB.DB()
+	sqlDB.SetMaxIdleConns(conf.Mysql.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(conf.Mysql.MaxOpenConns)
+	sqlDB.SetConnMaxIdleTime(time.Second * 5)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	err = gormDB.AutoMigrate()
+	if err != nil {
+		fmt.Println("MySQL AutoMigrate error", err.Error())
+		return nil, err
+	}
+  initDatabase(gormDB)
+
+
+  db = gormDB
+	return gormDB, nil
+}
+
+func initDatabase(db *gorm.DB) {
+
+}

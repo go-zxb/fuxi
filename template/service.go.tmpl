@@ -1,0 +1,63 @@
+package service
+
+import (
+  "errors"
+  "gorm.io/gen"
+	"{{.ModuleName}}/core/data"
+  model "{{.ModuleName}}/internal/model/{{.StructName}}"
+)
+
+// {{.StructName | initialLetter}}RepoInterface repo依赖倒置接口
+type {{.StructName | initialLetter}}RepoInterface interface {
+	Get{{.StructName | initialLetter}}List(query *model.{{.StructName | initialLetter}}Query) ([]*model.{{.StructName | initialLetter}}, error)
+	Get{{.StructName | initialLetter}}(id uint) (*model.{{.StructName | initialLetter}}, error)
+	Create{{.StructName | initialLetter}}({{.StructName}} *model.{{.StructName | initialLetter}}) error
+	Update{{.StructName | initialLetter}}({{.StructName}} *model.{{.StructName | initialLetter}}) (gen.ResultInfo, error)
+	Delete{{.StructName | initialLetter}}(id uint) (gen.ResultInfo,error)
+}
+
+type {{.StructName | initialLetter}}Service struct {
+	repo {{.StructName | initialLetter}}RepoInterface
+	rdb  *data.Redis
+}
+
+func New{{.StructName | initialLetter}}Service(repo {{.StructName | initialLetter}}RepoInterface) *{{.StructName | initialLetter}}Service {
+	return &{{.StructName | initialLetter}}Service{
+		repo: repo,
+		rdb: data.GetRedis(),
+	}
+}
+
+// Create{{.StructName | initialLetter}} 创建{{.StructName}}
+func (s *{{.StructName | initialLetter}}Service) Create{{.StructName | initialLetter}}({{.StructName}} *model.{{.StructName | initialLetter}}) error {
+	return s.repo.Create{{.StructName | initialLetter}}({{.StructName}})
+}
+
+// Update{{.StructName | initialLetter}} 更新{{.StructName}}
+func (s *{{.StructName | initialLetter}}Service) Update{{.StructName | initialLetter}}({{.StructName}} *model.{{.StructName | initialLetter}}) error {
+	_,err := s.repo.Update{{.StructName | initialLetter}}({{.StructName}})
+	return err
+}
+
+// Get{{.StructName | initialLetter}} 获取{{.StructName}}ByID
+func (s *{{.StructName | initialLetter}}Service) Get{{.StructName | initialLetter}}(id uint) (*model.{{.StructName | initialLetter}}, error) {
+	return s.repo.Get{{.StructName | initialLetter}}(id)
+}
+
+// Get{{.StructName | initialLetter}}List 获取{{.StructName}}列表
+func (s *{{.StructName | initialLetter}}Service) Get{{.StructName | initialLetter}}List(query *model.{{.StructName | initialLetter}}Query) ([]*model.{{.StructName | initialLetter}}, error) {
+	{{.StructName}}s, err := s.repo.Get{{.StructName | initialLetter}}List(query)
+  	if err != nil {
+  		return nil, err
+  	}
+  	if len({{.StructName}}s) == 0 {
+  		return nil, errors.New("no {{.StructName}} found")
+  	}
+  	return {{.StructName}}s, nil
+}
+
+// Delete{{.StructName | initialLetter}} 删除{{.StructName}}
+func (s *{{.StructName | initialLetter}}Service) Delete{{.StructName | initialLetter}}(id uint) error {
+	_,err :=  s.repo.Delete{{.StructName | initialLetter}}(id)
+	return err
+}

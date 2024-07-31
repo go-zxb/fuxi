@@ -1,0 +1,46 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+	api "{{.ModuleName}}/internal/api/{{.StructName}}"
+	repo "{{.ModuleName}}/internal/repo/{{.StructName}}"
+	service "{{.ModuleName}}/internal/service/{{.StructName}}"
+)
+
+type {{.StructName | initialLetter}}ApiInterface interface {
+	Get{{.StructName | initialLetter}}List(ctx *gin.Context)
+	Get{{.StructName | initialLetter}}(ctx *gin.Context)
+	Create{{.StructName | initialLetter}}(ctx *gin.Context)
+	Update{{.StructName | initialLetter}}(ctx *gin.Context)
+	Delete{{.StructName | initialLetter}}(ctx *gin.Context)
+}
+
+type {{.StructName | initialLetter}}Router struct {
+	engine *gin.Engine
+	api    {{.StructName | initialLetter}}ApiInterface
+}
+
+
+func New{{.StructName | initialLetter}}Router(engine *gin.Engine) *{{.StructName | initialLetter}}Router {
+	return &{{.StructName | initialLetter}}Router{
+		engine: engine,
+		api: api.New{{.StructName | initialLetter}}Api(
+			service.New{{.StructName | initialLetter}}Service(
+				repo.New{{.StructName | initialLetter}}Repo(),
+			),
+		),
+	}
+}
+
+// Init{{.StructName | initialLetter}}Router 初始化{{.StructName | initialLetter}}路由
+func (r *{{.StructName | initialLetter}}Router) Init{{.StructName | initialLetter}}Router() {
+{
+    //v1
+    groupV1:= r.engine.Group("api/v1")
+    groupV1.GET("/{{.StructName}}s", r.api.Get{{.StructName | initialLetter}}List)
+    groupV1.GET("/{{.StructName}}s/:id", r.api.Get{{.StructName | initialLetter}})
+    groupV1.POST("/{{.StructName}}s", r.api.Create{{.StructName | initialLetter}})
+    groupV1.PUT("/{{.StructName}}s/:id", r.api.Update{{.StructName | initialLetter}})
+    groupV1.DELETE("/{{.StructName}}s/:id", r.api.Delete{{.StructName | initialLetter}})
+}
+}

@@ -1,0 +1,93 @@
+package api
+
+import (
+	"github.com/gin-gonic/gin"
+	model "{{.ModuleName}}/internal/model/{{.StructName}}"
+	service "{{.ModuleName}}/internal/service/{{.StructName}}"
+	"{{.ModuleName}}/pkg/response"
+	"{{.ModuleName}}/pkg/strconv"
+)
+
+type {{.StructName | initialLetter}}Api struct {
+	reply response.IResponse
+	sv    *service.{{.StructName | initialLetter}}Service
+}
+
+func New{{.StructName | initialLetter}}Api(sv *service.{{.StructName | initialLetter}}Service) *{{.StructName | initialLetter}}Api {
+	return &{{.StructName | initialLetter}}Api{reply: response.New(), sv: sv}
+}
+
+// Create{{.StructName | initialLetter}} 创建{{.StructName}}
+func (a *{{.StructName | initialLetter}}Api) Create{{.StructName | initialLetter}}(ctx *gin.Context) {
+	var oo model.{{.StructName | initialLetter}}
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err := a.sv.Create{{.StructName | initialLetter}}(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+}
+
+// Update{{.StructName | initialLetter}}  更新{{.StructName}}
+func (a *{{.StructName | initialLetter}}Api) Update{{.StructName | initialLetter}}(ctx *gin.Context) {
+	var oo model.{{.StructName | initialLetter}}
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err := a.sv.Update{{.StructName | initialLetter}}(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+}
+
+// Get{{.StructName | initialLetter}} 获取{{.StructName}}ByID
+func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}(ctx *gin.Context) {
+	id := strconvx.StringToUint(ctx.Param("id"))
+	if id == 0 {
+		a.reply.New().WithCode(400).WithMessage("id not found").Fail(ctx)
+		return
+	}
+	list, err := a.sv.Get{{.StructName | initialLetter}}(id)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+}
+
+// Get{{.StructName | initialLetter}}List  获取{{.StructName}}列表
+func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}List(ctx *gin.Context) {
+	var oo model.{{.StructName | initialLetter}}Query
+	if err := ctx.ShouldBindQuery(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	list, err := a.sv.Get{{.StructName | initialLetter}}List(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+}
+
+// Delete{{.StructName | initialLetter}} 删除{{.StructName}}
+func (a *{{.StructName | initialLetter}}Api) Delete{{.StructName | initialLetter}}(ctx *gin.Context) {
+	id := strconvx.StringToUint(ctx.Param("id"))
+	if id == 0 {
+		a.reply.New().WithCode(400).WithMessage("id not found").Fail(ctx)
+		return
+	}
+	err := a.sv.Delete{{.StructName | initialLetter}}(id)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("删除成功").Success(ctx)
+}

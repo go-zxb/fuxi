@@ -1,0 +1,19 @@
+package gen
+
+import (
+	"gorm.io/gen"
+	{{.StructName}} "{{.ModuleName}}/internal/model/{{.StructName}}"
+)
+
+// Gen{{.StructName | initialLetter}}Build 生成{{.StructName}}数据CRUD依赖文件
+func Gen{{.StructName | initialLetter}}Build() {
+	g := gen.NewGenerator(gen.Config{
+		OutPath: "{{.GormGenPath}}",
+		Mode:    gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+
+	g.ApplyBasic(
+		{{.StructName}}.{{.StructName | initialLetter}}{},
+	)
+	g.Execute()
+}

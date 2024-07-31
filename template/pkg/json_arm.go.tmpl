@@ -1,0 +1,29 @@
+//go:build arm
+
+package json
+
+import (
+	"encoding/json"
+	"log"
+)
+
+func Marshal(data interface{}) []byte {
+	marshal, err := json.Marshal(data)
+	if err != nil {
+		log.Print(err)
+		return nil
+	}
+	return marshal
+}
+
+func Unmarshal(data []byte, v interface{}) error {
+	if len(data) == 0 {
+		return errors.New("value is empty")
+	}
+
+	err := json.Unmarshal(data, v)
+	if err != nil {
+		return err
+	}
+	return nil
+}
