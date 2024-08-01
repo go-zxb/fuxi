@@ -1,0 +1,14 @@
+package repo
+
+import (
+	"{{.ModuleName}}/internal/model/{{.StructName}}/query"
+	service "{{.ModuleName}}/internal/service/{{.StructName}}"
+)
+
+type {{.StructName | initialLetter}}Repo struct {
+	Q *query.Query
+}
+
+func New{{.StructName | initialLetter}}Repo() service.{{.StructName | initialLetter}}RepoInterface {
+	return &{{.StructName | initialLetter}}Repo{Q: query.Q}
+}

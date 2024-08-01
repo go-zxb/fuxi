@@ -2,6 +2,7 @@ package addapi
 
 import (
 	"fmt"
+	"github.com/go-zxb/fuxi/internal/project/base"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 	"go/parser"
@@ -82,6 +83,28 @@ func (a *AddApi) InsertApiHandle() error {
 		}
 		return true
 	})
+
+	name, _ := base.GetModuleName("go.mod")
+
+	if a.Method == "GET" || a.Method == "DELETE" && a.ISByID {
+		if !a.FuXiAst.HasImport(node, name+"/pkg/strconv") {
+			a.FuXiAst.AddImport(node, name+"/pkg/strconv")
+			hasInsert = false
+
+		}
+	}
+
+	if a.Method == "POST" || a.Method == "PUT" {
+		if !a.FuXiAst.HasImport(node, name+"/internal/model/"+a.Name) {
+			a.FuXiAst.AddImport(node, name+"/internal/model/"+a.Name)
+			hasInsert = false
+		}
+	}
+
+	if !a.FuXiAst.HasImport(node, "github.com/gin-gonic/gin") {
+		a.FuXiAst.AddImport(node, "github.com/gin-gonic/gin")
+		hasInsert = false
+	}
 
 	if !hasInsert {
 		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)

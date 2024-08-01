@@ -1,0 +1,15 @@
+package api
+
+import (
+	service "{{.ModuleName}}/internal/service/{{.StructName}}"
+	"{{.ModuleName}}/pkg/response"
+)
+
+type {{.StructName | initialLetter}}Api struct {
+	reply response.IResponse
+	sv    *service.{{.StructName | initialLetter}}Service
+}
+
+func New{{.StructName | initialLetter}}Api(sv *service.{{.StructName | initialLetter}}Service) *{{.StructName | initialLetter}}Api {
+	return &{{.StructName | initialLetter}}Api{reply: response.New(), sv: sv}
+}

@@ -1,0 +1,22 @@
+package service
+
+import (
+	"{{.ModuleName}}/core/data"
+)
+
+// {{.StructName | initialLetter}}RepoInterface repo依赖倒置接口
+type {{.StructName | initialLetter}}RepoInterface interface {
+
+}
+
+type {{.StructName | initialLetter}}Service struct {
+	repo {{.StructName | initialLetter}}RepoInterface
+	rdb  *data.Redis
+}
+
+func New{{.StructName | initialLetter}}Service(repo {{.StructName | initialLetter}}RepoInterface) *{{.StructName | initialLetter}}Service {
+	return &{{.StructName | initialLetter}}Service{
+		repo: repo,
+		rdb: data.GetRedis(),
+	}
+}

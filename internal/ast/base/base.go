@@ -7,6 +7,7 @@ import (
 	"go/ast"
 	"go/format"
 	"go/token"
+	"log"
 	"os"
 )
 
@@ -151,4 +152,24 @@ func (FuXiAst) SaveNode(node *ast.File, fset *token.FileSet, filePath string) er
 	// 格式化并写入修改后的AST
 	return format.Node(fd, fset, node)
 
+}
+
+func (FuXiAst) AddImport(file *ast.File, importNamePath string) {
+	// 添加包路径
+	log.Println("❌ 没有导入包", importNamePath)
+	log.Println("🕘正在导入包", importNamePath)
+	ast.Inspect(file, func(n ast.Node) bool {
+		importDecl, ok := n.(*ast.GenDecl)
+		if ok && importDecl.Tok == token.IMPORT {
+			importSpec := &ast.ImportSpec{
+				Path: &ast.BasicLit{
+					Kind:  token.STRING,
+					Value: fmt.Sprintf("%q", importNamePath),
+				},
+			}
+			importDecl.Specs = append(importDecl.Specs, importSpec)
+		}
+		return true
+	})
+	log.Println("✅ 导入包完成", importNamePath+"👌")
 }

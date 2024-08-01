@@ -8,7 +8,8 @@ import (
 	"github.com/go-zxb/fuxi/internal/model"
 	"github.com/go-zxb/fuxi/internal/project/base"
 	"github.com/go-zxb/fuxi/pkg"
-	"github.com/go-zxb/fuxi/template"
+	templatex "github.com/go-zxb/fuxi/template"
+	emptytemplatex "github.com/go-zxb/fuxi/template/empty"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -31,10 +32,10 @@ var (
 	filename     = ""
 	modelPath    = "internal/model"
 	gormGenPath  = "cmd/gorm/gen"
-	openapi      = "docs/openapi"
 	question     = ""
 	isOutputJson = ""
 	localJson    = "false"
+	empty        = "false"
 )
 
 // init 初始化
@@ -50,7 +51,8 @@ func init() {
 	NewApiCmd.Flags().StringVarP(&gormGenPath, "gormGenPath", "g", gormGenPath, "gormGen文件路径 ")
 	NewApiCmd.Flags().StringVarP(&isOutputJson, "json", "j", "false", "是否输出json数据")
 	NewApiCmd.Flags().StringVarP(&debug, "debug", "d", "false", "是否开启debug模式 ")
-	NewApiCmd.Flags().StringVarP(&localJson, "skip", "l", "false", "是否跳过生成代码步骤 ")
+	NewApiCmd.Flags().StringVarP(&localJson, "localJson", "l", "false", "使用本地json数据生成 ")
+	NewApiCmd.Flags().StringVarP(&empty, "empty", "e", "false", "是否生成空代码文件")
 }
 
 var NewApiCmd = &cobra.Command{
@@ -61,18 +63,14 @@ var NewApiCmd = &cobra.Command{
 	Run:     createCode,
 }
 
-// createCode 创建代码
-func createCode(cmd *cobra.Command, args []string) {
-	packagename, err := base.GetModuleName("go.mod")
-	if err != nil {
-		log.Fatalln("❗️请先初始化项目: fuxi project -n 项目名称")
+func handleArgs() *model.CodeModel {
+	jsonStr := ""
+	var err error
+
+	var genCode = &model.CodeModel{
+		Fields: make([]*model.GenCodeStruct, 0),
 	}
 
-	if pkg.HasChinese(filename) {
-		log.Fatalln("------❎ 名称不能包含中文❎--------")
-	}
-	jsonStr := ""
-	var genCode = &model.CodeModel{}
 	if filename != "" && localJson == "true" {
 		_, err = os.Stat("docs/json/" + filename + ".json")
 		if err == nil {
@@ -119,6 +117,31 @@ func createCode(cmd *cobra.Command, args []string) {
 			filename = strings.ToLower(genCode.StructName)
 		}
 	}
+	return genCode
+}
+
+// createCode 创建代码
+func createCode(cmd *cobra.Command, args []string) {
+	packagename, err := base.GetModuleName("go.mod")
+	if err != nil {
+		log.Fatalln("❗️请先初始化项目: fuxi project -n 项目名称")
+	}
+
+	if pkg.HasChinese(filename) {
+		log.Fatalln("------❎ 名称不能包含中文❎--------")
+	}
+
+	var genCode = &model.CodeModel{
+		Fields: make([]*model.GenCodeStruct, 0),
+	}
+
+	if !isTrue(empty) {
+		genCode = handleArgs()
+	} else {
+		if filename == "" {
+			log.Fatalln("------❎ 名称不可为空❎--------")
+		}
+	}
 
 	//对genCode进行单词长短排序😊
 	sort.Slice(genCode.Fields, func(i, j int) bool {
@@ -131,7 +154,6 @@ func createCode(cmd *cobra.Command, args []string) {
 	addApiCodePath("repo.go", repoPath, filename, ".go")
 	addApiCodePath("model.go", modelPath, filename, ".go")
 	addApiCodePath("gormGen.go", gormGenPath, filename, ".go")
-	addApiCodePath("openapi", openapi, filename, ".json")
 	var slicePath = make([]string, 0)
 	var ok = "n"
 	var isOK = false //判断是否有改动文件
@@ -205,7 +227,7 @@ func createCode(cmd *cobra.Command, args []string) {
 	log.Println("✅ :执行 go mod tidy 成功👌")
 
 	//运行gormGen生成gen代码
-	err = pkg.RunCommand("go", "run", gormGenPath+"/main.go")
+	err = pkg.RunCommandNoOutput("go", "run", gormGenPath+"/main.go")
 	if err != nil {
 		log.Fatalln("❎ Error ", err)
 	}
@@ -219,7 +241,13 @@ func createCode(cmd *cobra.Command, args []string) {
 // TmplExecute 模板渲染
 func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.CodeModel) error {
 	//读取模板
-	bytes, err := templatex.TmplData.ReadFile(data.TmplPath + ".tmpl")
+	var bytes []byte
+	var err error
+	if isTrue(empty) {
+		bytes, err = emptytemplatex.EmptyTmplData.ReadFile(data.TmplPath + ".tmpl")
+	} else {
+		bytes, err = templatex.TmplData.ReadFile(data.TmplPath + ".tmpl")
+	}
 	if err != nil {
 		return err
 	}
