@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-zxb/fuxi/config"
+	"github.com/go-zxb/fuxi/internal/cmd/openapi"
 	"github.com/go-zxb/fuxi/internal/project"
 	"github.com/go-zxb/fuxi/pkg"
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ func init() {
 	path, _ := os.Getwd()
 	log.Println("💻 当前运行目录:", path)
 	// 读取配置文件
-	_, err := config.NewConfig("../../config_dev.yaml")
+	_, err := config.NewConfig("")
 	if err != nil {
 		log.Fatalln("📒 配置文件读取错误", err)
 	}
@@ -64,6 +65,7 @@ func init() {
 	rootCmd.AddCommand(project.AddApiCmd)
 	rootCmd.AddCommand(project.NewProjectCmd)
 	rootCmd.AddCommand(project.NewApiCmd)
+	rootCmd.AddCommand(openapi.OpenapiCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(genCmd)
 }
