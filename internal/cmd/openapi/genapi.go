@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -118,7 +119,7 @@ func genDoc() {
 
 	// 生成 OpenAPI 文档
 	openapiDoc := generateOpenAPIDoc()
-	_ = os.MkdirAll(output, 0644)
+	_ = os.MkdirAll(path.Dir(output), 0644)
 	err := os.WriteFile(output, []byte(openapiDoc), 0644)
 	if err != nil {
 		log.Fatalln("❌", err.Error())
@@ -142,7 +143,12 @@ func walkToGetRoute(path string) {
 					if sel.Sel.Name == "GET" || sel.Sel.Name == "POST" || sel.Sel.Name == "PUT" || sel.Sel.Name == "DELETE" {
 						method := sel.Sel.Name
 						path_ := x.Args[0].(*ast.BasicLit).Value
-						handler := x.Args[1].(*ast.SelectorExpr).Sel.Name
+						handler := ""
+						if val, ok := x.Args[1].(*ast.SelectorExpr); ok {
+							handler = val.Sel.Name
+						} else {
+							handler = x.Args[1].(*ast.Ident).Name
+						}
 						group[ident.Name] = ident.Name
 						routes = append(routes, &Route{Method: method, Path: path_, Handler: handler, Group: ident.Name})
 					}
