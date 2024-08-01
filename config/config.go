@@ -102,19 +102,19 @@ func (c *Config) InitConfig(filePath string) (*Config, error) {
 	if os.IsNotExist(err) {
 		//用户给的配置文件不存在 则自动使用默认配置文件
 		// 判断默认配置文件是否存在 不存在则创建一份
-		_, err = os.Stat("config/config_dev.yaml")
+		_, err = os.Stat("config/fuxi_dev.yaml")
 		if os.IsNotExist(err) {
 			err = os.MkdirAll("config", os.ModePerm)
 			if err != nil {
 				return nil, errors.New("配置文件初始化失败")
 			}
-			err = os.WriteFile("config/config_dev.yaml", []byte(fileYaml), os.ModePerm)
+			err = os.WriteFile("config/fuxi_dev.yaml", []byte(fileYaml), os.ModePerm)
 			if err != nil {
 				return nil, errors.New("配置文件初始化失败")
 			}
-			path = "config/config_dev.yaml"
+			path = "config/fuxi_dev.yaml"
 		} else {
-			path = "config/config_dev.yaml"
+			path = "config/fuxi_dev.yaml"
 		}
 	}
 

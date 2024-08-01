@@ -9,7 +9,7 @@
 *.dylib
 build/
 json/
-config_dev.yaml
+fuxi_dev.yaml
 
 # Test binary, built with `go test -c`
 *.test
