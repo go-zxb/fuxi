@@ -2,53 +2,39 @@ package newapi
 
 import (
 	"fmt"
+	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"log"
-	"os"
 )
 
 type ASTSetDB struct {
 	Name     string
 	Imports  map[string]string
 	FilePath string
+	FuXiAst  base.FuXiAst
 }
 
 func (a *ASTSetDB) InsetCode() error {
-	// 创建一个文件集
 	fset := token.NewFileSet()
-
-	// 解析文件
 	node, err := parser.ParseFile(fset, a.FilePath, nil, parser.ParseComments)
 	if err != nil {
 		fmt.Println("Error parsing file:", err)
 		return err
 	}
 
-	// 遍历AST
 	hasInsert := false
+	dbInsert := false
 	ast.Inspect(node, func(n ast.Node) bool {
-		// 查找Start函数
 		funcDecl, ok := n.(*ast.FuncDecl)
 		if ok && funcDecl.Name.Name == "initDatabase" {
 
-			// 检查函数体中是否已经存在fmt.Println语句
-			for _, stmt := range funcDecl.Body.List {
-				if exprStmt, ok := stmt.(*ast.ExprStmt); ok {
-					if callExpr, ok := exprStmt.X.(*ast.CallExpr); ok {
-						if selExpr, ok := callExpr.Fun.(*ast.SelectorExpr); ok {
-							if selExpr.X.(*ast.Ident).Name == "query"+pkg.InitialLetter(a.Name) {
-								hasInsert = true
-							}
-						}
-					}
-				}
-			}
+			// 检测是否插入DB注册语句
+			dbInsert = a.FuXiAst.HasFunctionCall(node, "initDatabase", "query"+pkg.InitialLetter(a.Name))
 
-			if !hasInsert {
+			if !dbInsert {
 				// 创建一个新的表达式语句
 				newStmt := &ast.ExprStmt{
 					X: &ast.CallExpr{
@@ -64,15 +50,12 @@ func (a *ASTSetDB) InsetCode() error {
 						},
 					},
 				}
-				// 插入新的语句到Start函数体中
-				//r := funcDecl.Body.List[len(funcDecl.Body.List)-2:]
 				funcDecl.Body.List = append([]ast.Stmt{newStmt}, funcDecl.Body.List...)
 			}
 		}
-		// 查找导入声明
+		// 添加包路径
 		importDecl, ok := n.(*ast.GenDecl)
 		if ok && importDecl.Tok == token.IMPORT {
-			// 添加新的导入路径
 			importSpec := &ast.ImportSpec{
 				Path: &ast.BasicLit{
 					Kind:  token.STRING,
@@ -114,7 +97,7 @@ func (a *ASTSetDB) InsetCode() error {
 			}
 
 			if !hasInsert {
-				// 将结构｛｝添加到参数中
+				// 将xx结构体｛｝添加到参数中
 				appType := &ast.SelectorExpr{
 					X:   &ast.Ident{Name: fmt.Sprintf("\n%sModel", a.Name)},
 					Sel: &ast.Ident{Name: pkg.InitialLetter(a.Name)},
@@ -127,17 +110,8 @@ func (a *ASTSetDB) InsetCode() error {
 		return true
 	})
 
-	if !hasInsert {
-		// 打开文件以写入修改后的内容
-		file, err := os.Create(a.FilePath)
-		if err != nil {
-			log.Println("⚠️❎ Error creating file:", err)
-			return err
-		}
-		defer file.Close()
-
-		// 格式化并写入修改后的AST
-		err = format.Node(file, fset, node)
+	if !hasInsert || !dbInsert {
+		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
 			log.Println("⚠️❎ 数据库相关代码生成写入文件时出错:", err)
 			return err

@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"log"
-	"os"
 )
 
 // 添加apiHandle
@@ -37,15 +35,6 @@ func (a *AddApi) InsertApiHandle() error {
 
 	if templateBlock == nil {
 		log.Fatal("template block not found")
-	}
-
-	// 创建注释组
-	commentGroup := &ast.CommentGroup{
-		List: []*ast.Comment{
-			{
-				Text: "// This is a comment for the xx function",
-			},
-		},
 	}
 
 	hasInsert := false
@@ -85,9 +74,7 @@ func (a *AddApi) InsertApiHandle() error {
 						Results: &ast.FieldList{},
 					},
 					Body: templateBlock,
-					Doc:  commentGroup,
 				}
-				// 在文件末尾插入 xx 方法
 				i := len(file.Decls)
 				file.Decls = append(file.Decls[:i], append([]ast.Decl{updateUserMethod}, file.Decls[i:]...)...)
 			}
@@ -97,16 +84,7 @@ func (a *AddApi) InsertApiHandle() error {
 	})
 
 	if !hasInsert {
-		// 打开文件以写入修改后的内容
-		f, err := os.Create(a.FilePath)
-		if err != nil {
-			log.Println("❎ Error creating node:", err)
-			return err
-		}
-		defer f.Close()
-
-		// 格式化并写入修改后的AST
-		err = format.Node(f, fset, node)
+		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
 			log.Println("✅ ApiHandle 生成代码写入文件时出错:", err)
 			return err

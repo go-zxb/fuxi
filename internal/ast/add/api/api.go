@@ -2,13 +2,12 @@ package addapi
 
 import (
 	"fmt"
+	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"log"
-	"os"
 )
 
 type AddApi struct {
@@ -22,6 +21,7 @@ type AddApi struct {
 	IsReturnList bool
 	code         string
 	NoParams     bool
+	FuXiAst      base.FuXiAst
 }
 
 func (a *AddApi) InsertRouter() error {
@@ -35,18 +35,11 @@ func (a *AddApi) InsertRouter() error {
 	hasInsert := false
 	apiHasInsert := false
 	ast.Inspect(node, func(n ast.Node) bool {
-
-		//if funcDecl, ok := n.(*ast.FuncDecl); ok {
-		//	if funcDecl.Name.Name == fmt.Sprintf("Init%sRouter", InitialLetter(a.Name)) {
-		//		fmt.Println("is", funcDecl.Name.Name)
-		//	}
-		//}
-
-		//插入路由接口
+		//注册路由
 		if block, ok := n.(*ast.BlockStmt); ok {
 			for _, stmt := range block.List {
 				if blockStmt, ok := stmt.(*ast.BlockStmt); ok {
-					// 检查是否已经存在 POST 接口
+					// 检查是否已注册
 					for _, stmt := range blockStmt.List {
 						if exprStmt, ok := stmt.(*ast.ExprStmt); ok {
 							if call, ok := exprStmt.X.(*ast.CallExpr); ok {
@@ -80,12 +73,12 @@ func (a *AddApi) InsertRouter() error {
 			}
 		}
 
-		//插入APi接口
+		//插入interface接口
 		if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
 			for _, spec := range genDecl.Specs {
 				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-						// 检查是否已经存在 CreateUser 方法
+						// 检查是否已存在
 						for _, method := range interfaceType.Methods.List {
 							ident := method.Names[0].Name
 							if ident == pkg.InitialLetter(a.ApiFunc) {
@@ -96,7 +89,7 @@ func (a *AddApi) InsertRouter() error {
 						}
 
 						if !apiHasInsert {
-							// 在接口定义中插入新的方法
+							// 插入接口方法签名
 							newMethod := &ast.Field{
 								Names: []*ast.Ident{ast.NewIdent(pkg.InitialLetter(a.ApiFunc))},
 								Type: &ast.FuncType{
@@ -122,16 +115,7 @@ func (a *AddApi) InsertRouter() error {
 	})
 
 	if !hasInsert || !apiHasInsert {
-		// 打开文件以写入修改后的内容
-		file, err := os.Create(a.FilePath)
-		if err != nil {
-			log.Println("❎ Error creating file:", err)
-			return err
-		}
-		defer file.Close()
-
-		// 格式化并写入修改后的AST
-		err = format.Node(file, fset, node)
+		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
 			log.Println("✅ AddApi 生成代码写入文件时出错:", err)
 			return err

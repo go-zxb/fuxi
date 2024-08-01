@@ -96,12 +96,6 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 	queryNoParams := `
 	package main
 func (a *UserApi) CreateUser(ctx *gin.Context) {
-	id := strconvx.StringToUint(ctx.Param("id"))
-	if id == 0 {
-		a.reply.New().WithCode(400).WithMessage("id not found").Fail(ctx)
-		return
-	}
-	
 	resp,err := a.sv.` + pkg.InitialLetter(a.ApiFunc) + `()
 	if err != nil {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
