@@ -2,13 +2,12 @@ package addService
 
 import (
 	"fmt"
+	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"log"
-	"os"
 )
 
 type AddService struct {
@@ -24,6 +23,7 @@ type AddService struct {
 	NoParams     bool
 	obj          string
 	ReturnType   string
+	FuXiAst      base.FuXiAst
 }
 
 func (a *AddService) InsertService() error {
@@ -32,26 +32,6 @@ func (a *AddService) InsertService() error {
 
 	block := &ast.BlockStmt{
 		List: []ast.Stmt{
-			// 创建一个赋值语句
-			//&ast.AssignStmt{
-			//	Lhs: []ast.Expr{
-			//		ast.NewIdent("_"),
-			//		ast.NewIdent("err"),
-			//	},
-			//	Tok: token.DEFINE,
-			//	Rhs: []ast.Expr{
-			//		&ast.CallExpr{
-			//			Fun: &ast.SelectorExpr{
-			//				X:   ast.NewIdent("s.repo"),
-			//				Sel: ast.NewIdent(pkg.InitialLetter(a.ApiFunc)),
-			//			},
-			//			Args: []ast.Expr{
-			//				ast.NewIdent(a.Name),
-			//			},
-			//		},
-			//	},
-			//},
-			// 创建一个返回语句
 			&ast.ReturnStmt{
 				Results: []ast.Expr{
 					&ast.CallExpr{
@@ -107,7 +87,6 @@ func (a *AddService) InsertService() error {
 						},
 					},
 				}
-				// 在文件末尾插入 UpdateUser 方法
 				i := len(file.Decls)
 				file.Decls = append(file.Decls[:i], append([]ast.Decl{updateUserMethod}, file.Decls[i:]...)...)
 			}
@@ -134,7 +113,6 @@ func (a *AddService) InsertService() error {
 						}
 
 						if !apiHasInsert {
-							// 在接口定义中插入新的方法
 							newMethod := &ast.Field{
 								Names: []*ast.Ident{ast.NewIdent(pkg.InitialLetter(a.ApiFunc))},
 								Type:  &a.funcType,
@@ -151,16 +129,7 @@ func (a *AddService) InsertService() error {
 	},
 	)
 	if !hasInsert || !apiHasInsert {
-		// 打开文件以写入修改后的内容
-		f, err := os.Create(a.FilePath)
-		if err != nil {
-			log.Println("❎ Error creating node:", err)
-			return err
-		}
-		defer f.Close()
-
-		// 格式化并写入修改后的AST
-		err = format.Node(f, fset, node)
+		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
 			log.Println("✅ AddService 生成代码写入文件时出错:", err)
 			return err

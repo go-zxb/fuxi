@@ -22,3 +22,17 @@ func RunCommand(name string, args ...string) error {
 	}
 	return err
 }
+
+func RunCommandNoOutput(name string, args ...string) error {
+	command := exec.Command(name, args...)
+	err := command.Start()
+	if err != nil {
+		return errors.New("⚠️❎ 启动命令时出错:" + err.Error())
+	}
+
+	err = command.Wait()
+	if err != nil {
+		return errors.New("⚠️❎ 命令已完成，但有错误:" + err.Error())
+	}
+	return err
+}

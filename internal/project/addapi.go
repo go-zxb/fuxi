@@ -37,10 +37,8 @@ var AddApiCmd = &cobra.Command{
 			return
 		}
 
-		//fmt.Println(iSByID, "-------------", isReturnList, noParams)
-
 		if api == "" {
-			api = apiFunc
+			api = strings.ToLower(apiFunc)
 		}
 
 		apiAdd := addapi.AddApi{

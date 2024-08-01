@@ -82,7 +82,7 @@ func handleGenPkgCode(cmd *cobra.Command, args []string) {
 					log.Println(goFilePaht, "🍵 Hi 文件已存在...")
 					path, _ := os.Getwd()
 					log.Println("⚠️ 老家伙你现在在的目录是:", path)
-					log.Print("🧒老伙计请确认是否继续,继续会覆盖相关代码文件 (Y/n)⬇️:")
+					fmt.Print("🧒老伙计请确认是否继续,继续会覆盖相关代码文件 (Y/n)⬇️:")
 					scan, err := fmt.Scan(&ok)
 					if err != nil {
 						log.Fatalln(scan, err)
@@ -138,7 +138,7 @@ func handleGenPkgCode(cmd *cobra.Command, args []string) {
 	}
 
 	log.Println("🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在拉取依赖包...")
-	err := pkg.RunCommand("go", "mod", "tidy")
+	err := pkg.RunCommandNoOutput("go", "mod", "tidy")
 	if err != nil {
 		log.Fatalln("❎ 依赖文件拉取失败:", err)
 	}
