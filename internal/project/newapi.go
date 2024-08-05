@@ -141,6 +141,7 @@ func createCode(cmd *cobra.Command, args []string) {
 		if filename == "" {
 			log.Fatalln("------❎ 名称不可为空❎--------")
 		}
+		genCode.Table = strings.ToLower(filename)
 	}
 
 	//对genCode进行单词长短排序😊
