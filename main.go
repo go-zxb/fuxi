@@ -52,6 +52,32 @@ var runCmd = &cobra.Command{
 	},
 }
 
+var buildGoCmd = &cobra.Command{
+	Use:   "build:go",
+	Short: "运行go build -ldflags=\"-s -w\"",
+	Long:  "运行go build -ldflags=\"-s -w\"",
+	Run: func(cmd *cobra.Command, args []string) {
+		err := pkg.RunCommand("go", "build", `-ldflags=-s -w`)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println("✅ run success 👌")
+	},
+}
+
+var buildFlutterCmd = &cobra.Command{
+	Use:   "build:flt",
+	Short: "运行flutter build windows ",
+	Long:  "运行flutter build windows ",
+	Run: func(cmd *cobra.Command, args []string) {
+		err := pkg.RunCommand("flutter", "build", `windows`)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println("✅ run success 👌")
+	},
+}
+
 func init() {
 	path, _ := os.Getwd()
 	log.Println("💻 当前运行目录:", path)
@@ -68,6 +94,8 @@ func init() {
 	rootCmd.AddCommand(openapi.OpenapiCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(genCmd)
+	rootCmd.AddCommand(buildGoCmd)
+	rootCmd.AddCommand(buildFlutterCmd)
 }
 
 func main() {
