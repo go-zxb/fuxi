@@ -1,102 +1,14 @@
 package addRepo
 
 import (
+	"github.com/go-zxb/fuxi/internal/ast/add/base"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 )
 
 func (a *AddRepo) FuncType() {
-	create := ast.FuncType{
-		Params: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Names: []*ast.Ident{ast.NewIdent(a.Name)},
-					Type:  &ast.StarExpr{X: ast.NewIdent("model." + pkg.InitialLetter(a.Name))},
-				},
-			},
-		},
-		Results: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Type: ast.NewIdent("error"),
-				},
-			},
-		},
-	}
-
-	update := ast.FuncType{
-		Params: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Names: []*ast.Ident{ast.NewIdent(a.Name)},
-					Type:  &ast.StarExpr{X: ast.NewIdent("model." + pkg.InitialLetter(a.Name))},
-				},
-			},
-		},
-		Results: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Type: ast.NewIdent("gen.ResultInfo"),
-				},
-				{
-					Type: ast.NewIdent("error"),
-				},
-			},
-		},
-	}
-
-	queryList := ast.FuncType{
-		Params: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Names: []*ast.Ident{ast.NewIdent(a.Name)},
-					Type: &ast.StarExpr{
-						X: &ast.Ident{Name: "model." + pkg.InitialLetter(a.Name) + "Query"},
-					},
-				},
-			},
-		},
-		Results: a.GetReturnType(),
-	}
-
-	queryID := ast.FuncType{
-		Params: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Names: []*ast.Ident{ast.NewIdent("id")},
-					Type:  ast.NewIdent("uint"),
-				},
-			},
-		},
-		Results: a.GetReturnType(),
-	}
-
-	queryNoParams := ast.FuncType{
-		Params: &ast.FieldList{
-			List: []*ast.Field{},
-		},
-		Results: a.GetReturnType(),
-	}
-
-	delete_ := ast.FuncType{
-		Params: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Names: []*ast.Ident{ast.NewIdent("id")},
-					Type:  ast.NewIdent("uint"),
-				},
-			},
-		},
-		Results: &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Type: ast.NewIdent("gen.ResultInfo"),
-				},
-				{
-					Type: ast.NewIdent("error"),
-				},
-			},
-		},
+	if a.ReturnType == "objlist" {
+		a.IsReturnList = true
 	}
 
 	bodyCreate := `
@@ -131,12 +43,34 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 	return q.Find()
 }
 `
-	bodyQueryByIDFirst := `
+	bodyQueryByIDFirst1 := `
 package main
 func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
 	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
 	q := Q.Where(Q.ID.Eq(id))
 	return q.First()
+}
+`
+
+	bodyQueryByIDFirst2 := `
+package main
+func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
+	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
+	q := Q.Where(Q.ID.Eq(id))
+	_, err := q.First()
+	if err != nil {
+		return "", err
+	}
+	return "", nil
+}
+`
+
+	bodyQueryByIDFirst3 := `
+package main
+func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
+	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
+	q := Q.Where(Q.ID.Eq(id))
+	return q.Count()
 }
 `
 
@@ -169,19 +103,28 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 	switch a.Method {
 	case "GET":
 		if a.ISByID {
-			a.funcType = queryID
+			a.funcType = base.QueryByID(a.IsReturnList, a.Name, a.ReturnType)
 			if a.IsReturnList {
 				a.bodyCode = bodyQueryByIDList
 			} else {
-				a.bodyCode = bodyQueryByIDFirst
+				if a.ReturnType == "obj" {
+					a.bodyCode = bodyQueryByIDFirst1
+				} else {
+					if goReturnType(a.ReturnType) == "0" {
+						a.bodyCode = bodyQueryByIDFirst3
+					} else {
+						a.bodyCode = bodyQueryByIDFirst2
+					}
+				}
+
 			}
 		} else {
 			//入参Query对象 可包含更多查询字段
 			if a.NoParams {
-				a.funcType = queryNoParams
+				a.funcType = base.QueryNoParams(a.IsReturnList, a.Name, a.ReturnType)
 				a.bodyCode = bodyQueryNoParams
 			} else {
-				a.funcType = queryList
+				a.funcType = base.QueryByObj(a.IsReturnList, a.Name, a.ReturnType)
 				if a.IsReturnList {
 					a.bodyCode = bodyQueryList
 				} else {
@@ -192,59 +135,27 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 		}
 
 	case "POST":
-		a.funcType = create
+		a.funcType = base.Create(a.Name)
 		a.bodyCode = bodyCreate
 	case "PUT":
-		a.funcType = update
+		a.funcType = base.Update(a.Name)
 		a.bodyCode = bodyUpdate
 	case "DELETE":
-		a.funcType = delete_
+		a.funcType = base.Delete1()
 		a.bodyCode = bodyDelete
 	default:
-		a.funcType = ast.FuncType{}
+		a.funcType = &ast.FuncType{}
 		a.bodyCode = bodyQueryList
 	}
 }
 
-func (a *AddRepo) GetReturnType() *ast.FieldList {
-	if a.IsReturnList {
-		return &ast.FieldList{
-			List: []*ast.Field{
-				{
-					Type: &ast.ArrayType{
-						Elt: &ast.StarExpr{
-							X: &ast.Ident{Name: "model." + pkg.InitialLetter(a.Name)},
-						},
-					},
-				},
-				{
-					Type: ast.NewIdent("error"),
-				},
-			},
-		}
-	} else {
-		return &ast.FieldList{
-			List: []*ast.Field{
-				a.getReturnType(),
-				{
-					Type: ast.NewIdent("error"),
-				},
-			},
-		}
-	}
-}
-
-func (a *AddRepo) getReturnType() *ast.Field {
-	switch a.ReturnType {
-	case "int", "uint", "int64", "float64", "string":
-		return &ast.Field{
-			Type: ast.NewIdent(a.ReturnType),
-		}
+func goReturnType(returnType string) string {
+	switch returnType {
+	case "int", "uint", "int64", "float64":
+		return "0"
+	case "string":
+		return "1"
 	default:
-		return &ast.Field{
-			Type: &ast.StarExpr{
-				X: &ast.Ident{Name: "model." + pkg.InitialLetter(a.Name)},
-			},
-		}
+		return "1"
 	}
 }

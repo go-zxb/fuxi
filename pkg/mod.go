@@ -1,4 +1,4 @@
-package base
+package pkg
 
 import (
 	"golang.org/x/mod/modfile"

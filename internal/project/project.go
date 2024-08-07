@@ -1,6 +1,7 @@
 package project
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-zxb/fuxi/pkg"
@@ -14,6 +15,7 @@ import (
 var (
 	projectName = ""
 	debug       = ""
+	isWeb       = false
 )
 
 type Project struct {
@@ -33,16 +35,28 @@ var NewProjectCmd = &cobra.Command{
 	Use:   "project",
 	Short: "创建一个go项目工程",
 	Long:  "创建一个go项目工程",
-	Run:   handleGenPkgCode,
+	Run:   cmdHandle,
 }
 
 var projectCodePath []*PathData
 
-func handleGenPkgCode(cmd *cobra.Command, args []string) {
+func cmdHandle(cmd *cobra.Command, args []string) {
 	if pkg.HasChinese(projectName) {
 		log.Fatalln("------名称不能包含中文--------")
 	}
+	infoChan := make(chan pkg.CommandInfo)
+	go handleGenProjectCode(infoChan)
+	for info := range infoChan {
+		if info.Error != nil {
+			log.Fatalln("❌", info.Message, info.Error.Error())
+		} else {
+			log.Println(info.Message)
+		}
+	}
+}
 
+func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
+	defer close(infoChan) // 确保在函数返回时关闭通道
 	addProjectCodePath("mod", "", "go", ".mod")
 	addProjectCodePath("main.go", "", "main", ".go")
 	addProjectCodePath("core.go", "core", "core", ".go")
@@ -61,7 +75,7 @@ func handleGenPkgCode(cmd *cobra.Command, args []string) {
 	addProjectCodePath("redis.go", "core/data", "redis", ".go")
 	addProjectCodePath("cors.go", "middleware", "cors", ".go")
 
-	log.Println("正在复制go基础文件....")
+	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"
 	isOk := false
 	for _, data := range projectCodePath {
@@ -75,7 +89,7 @@ func handleGenPkgCode(cmd *cobra.Command, args []string) {
 
 		//文件是否存在
 		_, err := os.Stat(goFilePaht)
-		if err == nil {
+		if err == nil && isWeb == false {
 			//debug模式先删掉文件
 			if isTrue(debug) {
 				if ok == "n" {
@@ -97,24 +111,26 @@ func handleGenPkgCode(cmd *cobra.Command, args []string) {
 			} else {
 				continue
 			}
+		} else if err == nil && isWeb {
+			_ = os.Remove(goFilePaht)
 		}
 
 		if data.FilePath != "" {
 			err = os.MkdirAll(data.FilePath, os.ModePerm)
 			if err != nil {
-				log.Println(data.FilePath, err)
+				infoChan <- pkg.CommandInfo{Message: "🐮🐴正创建目录失败....", Error: err}
 			}
 		}
 
 		//log.Println(data.FileName+data.FileExtension, "文件路径:", goFilePaht)
 		bytes, err := tmpl.GoCode.ReadFile(data.TmplPath + ".tmpl")
 		if err != nil {
-			log.Fatalln(err)
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴读取模板代码失败....", Error: err}
 		}
 		tmplx := template.Must(template.New("demo").Parse(string(bytes)))
 		file, err := os.OpenFile(goFilePaht, os.O_CREATE, 0750)
 		if err != nil {
-			log.Fatalln(err)
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴创建源码文件失败....", Error: err}
 		}
 		defer file.Close()
 		if err = tmplx.Execute(file, Project{
@@ -124,30 +140,43 @@ func handleGenPkgCode(cmd *cobra.Command, args []string) {
 			Version:     gin.Version,
 			Description: "代码生成工具",
 		}); err != nil {
-			log.Println("⚠️❎ 代码渲染失败", err)
+			infoChan <- pkg.CommandInfo{Message: "⚠️❎🐮🐴代码渲染失败....", Error: err}
 		}
 		if data.FileExtension == ".go" {
 			_ = FormatGoCode(goFilePaht)
 		}
 		isOk = true
-		log.Println("✅ ", goFilePaht, "文件创建成功👌！")
+		infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅  %s 文件创建成功👌！", goFilePaht), Error: nil}
 	}
 
 	if !isOk {
-		log.Fatalln("❎ 项目还是哪个项目, 未做任何改变 😊 ~略略略略~")
+		infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅  项目还是哪个项目, 未做任何改变 😊 ~略略略略~"), Error: nil}
 	}
 
-	log.Println("🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在拉取依赖包...")
-	err := pkg.RunCommandNoOutput("go", "mod", "tidy")
-	if err != nil {
-		log.Fatalln("❎ 依赖文件拉取失败:", err)
+	infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在拉取依赖包...", Error: nil}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	modChan := make(chan pkg.CommandInfo)
+	go pkg.RunCommandChannel(ctx, modChan, "go", "mod", "tidy")
+	for info := range modChan {
+		if info.Error != nil {
+			infoChan <- pkg.CommandInfo{Message: "❌ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 依赖文件拉取失败... "}
+			cancel()
+			return
+		}
+		if info.Message == "命令执行成功" {
+			infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 拉取依赖包成功...", Error: nil}
+		} else {
+			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
+		}
 	}
-	log.Println("✅ 拉取依赖包成功")
-	log.Println("✅ 创建", projectName, "项目成功")
-	fmt.Println(`程序流畅心自喜😊，
-助人为乐情更怡🤗；
-共享成功欢声起🎊，
-同心协力福缘齐🤝。`)
+
+	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 项目成功", projectName), Error: nil}
+	si := `程序流畅心自喜😊,
+助人为乐情更怡🤗;
+共享成功欢声起🎊,
+同心协力福缘齐🤝.`
+	infoChan <- pkg.CommandInfo{Message: si, Error: nil}
 }
 
 func addProjectCodePath(tmplPath, filepath, filename string, suffix string) {

@@ -1,6 +1,7 @@
 package addRepo
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
@@ -17,7 +18,7 @@ type AddRepo struct {
 	Api          string //接口
 	ApiFunc      string //接口方法
 	Results      []*ast.Field
-	funcType     ast.FuncType
+	funcType     *ast.FuncType
 	bodyCode     string
 	ISByID       bool
 	IsReturnList bool
@@ -94,12 +95,12 @@ func (a *AddRepo) InsertRepo() error {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, a.FilePath, nil, parser.ParseComments)
 	if err != nil {
-		log.Fatal(err)
+		return errors.New(err.Error())
 	}
 
 	templateFile, err := parser.ParseFile(fset, "", a.bodyCode, parser.ParseComments)
 	if err != nil {
-		log.Fatal(err)
+		return errors.New(err.Error())
 	}
 
 	var templateBlock *ast.BlockStmt
@@ -111,7 +112,7 @@ func (a *AddRepo) InsertRepo() error {
 	}
 
 	if templateBlock == nil {
-		log.Fatal("template block not found")
+		return errors.New("template block not found")
 	}
 
 	hasInsert := false
@@ -139,7 +140,7 @@ func (a *AddRepo) InsertRepo() error {
 						},
 					},
 					Name: ast.NewIdent(pkg.InitialLetter(a.ApiFunc)),
-					Type: &a.funcType,
+					Type: a.funcType,
 					Body: templateBlock,
 					Doc: &ast.CommentGroup{
 						List: []*ast.Comment{
@@ -156,6 +157,12 @@ func (a *AddRepo) InsertRepo() error {
 		return true
 	})
 
+	name, _ := pkg.GetModuleName("go.mod")
+	if !a.FuXiAst.HasImport(node, name+"/internal/model/"+a.Name) {
+		a.FuXiAst.AddImport(node, name+"/internal/model/"+a.Name)
+		hasInsert = false
+	}
+
 	if !hasInsert {
 		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
@@ -163,6 +170,9 @@ func (a *AddRepo) InsertRepo() error {
 			return err
 		}
 		log.Println("✅ AddRepo 生成代码成功。")
+	} else {
+		fmt.Println(pkg.InitialLetter(a.ApiFunc) + "Repo方法已经存在")
+		return errors.New(pkg.InitialLetter(a.ApiFunc) + "Repo方法已经存在")
 	}
 	return nil
 }

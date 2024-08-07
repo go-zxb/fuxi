@@ -1,6 +1,7 @@
 package addService
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
@@ -17,11 +18,12 @@ type AddService struct {
 	Api          string //接口
 	ApiFunc      string //接口方法
 	Results      []*ast.Field
-	funcType     ast.FuncType
+	funcType     *ast.FuncType
+	funcTypeSv   *ast.FuncType
+	Body         *ast.BlockStmt
 	ISByID       bool
 	IsReturnList bool
 	NoParams     bool
-	obj          string
 	ReturnType   string
 	FuXiAst      base.FuXiAst
 }
@@ -30,28 +32,10 @@ func (a *AddService) InsertService() error {
 
 	a.FuncType()
 
-	block := &ast.BlockStmt{
-		List: []ast.Stmt{
-			&ast.ReturnStmt{
-				Results: []ast.Expr{
-					&ast.CallExpr{
-						Fun: &ast.SelectorExpr{
-							X:   ast.NewIdent("s.repo"),
-							Sel: ast.NewIdent(pkg.InitialLetter(a.ApiFunc)),
-						},
-						Args: []ast.Expr{
-							ast.NewIdent(a.obj),
-						},
-					},
-				},
-			},
-		},
-	}
-
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, a.FilePath, nil, parser.ParseComments)
 	if err != nil {
-		log.Fatal(err)
+		return errors.New(err.Error())
 	}
 
 	hasInsert := false
@@ -79,8 +63,8 @@ func (a *AddService) InsertService() error {
 						},
 					},
 					Name: ast.NewIdent(pkg.InitialLetter(a.ApiFunc)),
-					Type: &a.funcType,
-					Body: block,
+					Type: a.funcTypeSv,
+					Body: a.Body,
 					Doc: &ast.CommentGroup{
 						List: []*ast.Comment{
 							{Text: "// " + pkg.InitialLetter(a.ApiFunc) + a.Method + " " + a.Name},
@@ -115,7 +99,7 @@ func (a *AddService) InsertService() error {
 						if !apiHasInsert {
 							newMethod := &ast.Field{
 								Names: []*ast.Ident{ast.NewIdent(pkg.InitialLetter(a.ApiFunc))},
-								Type:  &a.funcType,
+								Type:  a.funcType,
 							}
 							interfaceType.Methods.List = append(interfaceType.Methods.List, newMethod)
 						}
@@ -128,6 +112,13 @@ func (a *AddService) InsertService() error {
 		return true
 	},
 	)
+
+	name, _ := pkg.GetModuleName("go.mod")
+	if !a.FuXiAst.HasImport(node, name+"/internal/model/"+a.Name) {
+		a.FuXiAst.AddImport(node, name+"/internal/model/"+a.Name)
+		hasInsert = false
+	}
+
 	if !hasInsert || !apiHasInsert {
 		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
@@ -135,6 +126,9 @@ func (a *AddService) InsertService() error {
 			return err
 		}
 		log.Println("✅ AddService 生成代码成功。")
+	} else {
+		fmt.Println(pkg.InitialLetter(a.ApiFunc) + "Service 方法已经存在")
+		return errors.New(pkg.InitialLetter(a.ApiFunc) + "Service 方法已经存在")
 	}
 	return nil
 }

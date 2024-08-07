@@ -1,8 +1,8 @@
 package addapi
 
 import (
+	"errors"
 	"fmt"
-	"github.com/go-zxb/fuxi/internal/project/base"
 	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 	"go/parser"
@@ -18,12 +18,12 @@ func (a *AddApi) InsertApiHandle() error {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, a.FilePath, nil, parser.ParseComments)
 	if err != nil {
-		log.Fatal(err)
+		return errors.New(err.Error())
 	}
 
 	templateFile, err := parser.ParseFile(fset, "", a.code, parser.ParseComments)
 	if err != nil {
-		log.Fatal(err)
+		return errors.New(err.Error())
 	}
 
 	var templateBlock *ast.BlockStmt
@@ -35,7 +35,7 @@ func (a *AddApi) InsertApiHandle() error {
 	}
 
 	if templateBlock == nil {
-		log.Fatal("template block not found")
+		return errors.New("template block not found")
 	}
 
 	hasInsert := false
@@ -84,7 +84,7 @@ func (a *AddApi) InsertApiHandle() error {
 		return true
 	})
 
-	name, _ := base.GetModuleName("go.mod")
+	name, _ := pkg.GetModuleName("go.mod")
 
 	if a.Method == "GET" || a.Method == "DELETE" && a.ISByID {
 		if !a.FuXiAst.HasImport(node, name+"/pkg/strconv") {
@@ -94,11 +94,9 @@ func (a *AddApi) InsertApiHandle() error {
 		}
 	}
 
-	if a.Method == "POST" || a.Method == "PUT" {
-		if !a.FuXiAst.HasImport(node, name+"/internal/model/"+a.Name) {
-			a.FuXiAst.AddImport(node, name+"/internal/model/"+a.Name)
-			hasInsert = false
-		}
+	if !a.FuXiAst.HasImport(node, name+"/internal/model/"+a.Name) {
+		a.FuXiAst.AddImport(node, name+"/internal/model/"+a.Name)
+		hasInsert = false
 	}
 
 	if !a.FuXiAst.HasImport(node, "github.com/gin-gonic/gin") {
@@ -113,6 +111,8 @@ func (a *AddApi) InsertApiHandle() error {
 			return err
 		}
 		log.Println("✅ ApiHandle 生成代码成功。")
+	} else {
+		return errors.New(pkg.InitialLetter(a.ApiFunc) + "ApiHandle 方法已经存在")
 	}
 	return nil
 }

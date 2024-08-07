@@ -5,10 +5,16 @@ import (
 	"github.com/go-zxb/fuxi/internal/ast/add/api"
 	addRepo "github.com/go-zxb/fuxi/internal/ast/add/repo"
 	addService "github.com/go-zxb/fuxi/internal/ast/add/service"
+	"github.com/go-zxb/fuxi/pkg"
 	"github.com/spf13/cobra"
 	"log"
 	"strings"
 )
+
+var gushi = `程序优化我心欢😊，
+携手同行路更宽🛣️；
+你我共勉心相连🤝，
+共创辉煌乐无边🎉。`
 
 var (
 	name         = ""
@@ -25,6 +31,54 @@ var (
 	returnType   = ""
 )
 
+func Init() {
+	//Print()
+	name = "great"
+	method = "get"
+	api = ""
+	apiFunc = ""
+	apiPath = "internal/api"
+	routerPath = "internal/router"
+	servicePath = "internal/service"
+	repoPath = "internal/repo"
+	iSByID = "true"
+	isReturnList = "false"
+	noParams = "false"
+	returnType = ""
+	debug = ""
+	filename = ""
+	modelPath = "internal/model"
+	gormGenPath = "cmd/gorm/gen"
+	question = ""
+	isOutputJson = ""
+	localJson = "false"
+	empty = "false"
+}
+
+func Print() {
+	fmt.Println(
+		"name: ", name,
+		"method: ", method,
+		"api: ", api,
+		"apiFunc: ", apiFunc,
+		"apiPath: ", apiPath,
+		"routerPath: ", routerPath,
+		"servicePath: ", servicePath,
+		"repoPath: ", repoPath,
+		"iSByID: ", iSByID,
+		"isReturnList: ", isReturnList,
+		"noParams: ", noParams,
+		"returnType: ", returnType,
+		"debug: ", debug,
+		"filename: ", filename,
+		"modelPath: ", modelPath,
+		"gormGenPath: ", gormGenPath,
+		"question: ", question,
+		"isOutputJson: ", isOutputJson,
+		"localJson: ", localJson,
+		"empty: ", empty)
+}
+
 var AddApiCmd = &cobra.Command{
 	Use:   "api:add",
 	Short: "单独添加一个接口",
@@ -32,84 +86,102 @@ var AddApiCmd = &cobra.Command{
 	Example: "fuxi api:add -n (模块名称) -m (请求方法) -a (api路由路径) -f (方法签名)\n" +
 		"fuxi api:add -n user -m get -a userNickname -f userNickname",
 	Run: func(cmd *cobra.Command, args []string) {
-		if name == "" || method == "" || apiFunc == "" {
-			cobra.CheckErr("args is empty... 什么? 需要帮助? fuxi api:add -h 可以帮到你!")
-			return
+		infoChan := make(chan pkg.CommandInfo)
+		go addApiHandle(infoChan)
+		for info := range infoChan {
+			if info.Error != nil {
+				log.Fatalln("❌", info.Message, info.Error.Error())
+			} else {
+				log.Println(info.Message)
+			}
 		}
-
-		if api == "" {
-			api = strings.ToLower(apiFunc)
-		}
-
-		apiAdd := addapi.AddApi{
-			Name:         name,
-			FilePath:     fmt.Sprintf("%s/%s/%s.go", routerPath, name, name),
-			Method:       strings.ToUpper(method),
-			Api:          api,
-			ApiFunc:      apiFunc,
-			ISByID:       isTrue(iSByID),
-			IsReturnList: isTrue(isReturnList),
-			NoParams:     isTrue(noParams),
-		}
-		if apiAdd.NoParams {
-			apiAdd.ISByID = false
-		}
-		fmt.Println(apiAdd.ISByID)
-		err := apiAdd.InsertRouter()
-		if err != nil {
-			log.Fatalln("❎ 添加api代码错误", err)
-		}
-
-		apiAdd.FilePath = fmt.Sprintf("%s/%s/%s.go", apiPath, name, name)
-		err = apiAdd.InsertApiHandle()
-		if err != nil {
-			log.Fatalln("❎ 添加代码错误", err)
-		}
-
-		//添加service
-		sv := addService.AddService{
-			Name:         name,
-			FilePath:     fmt.Sprintf("%s/%s/%s.go", servicePath, name, name),
-			Method:       strings.ToUpper(method),
-			Api:          api,
-			ApiFunc:      apiFunc,
-			ReturnType:   returnType,
-			ISByID:       isTrue(iSByID),
-			IsReturnList: isTrue(isReturnList),
-			NoParams:     isTrue(noParams),
-		}
-		if sv.NoParams {
-			sv.ISByID = false
-		}
-		err = sv.InsertService()
-		if err != nil {
-			log.Fatalln("❎ 添加service代码错误", err)
-		}
-
-		repo := addRepo.AddRepo{
-			Name:         name,
-			FilePath:     fmt.Sprintf("%s/%s/%s.go", repoPath, name, name),
-			Method:       strings.ToUpper(method),
-			Api:          api,
-			ApiFunc:      apiFunc,
-			ReturnType:   returnType,
-			ISByID:       isTrue(iSByID),
-			IsReturnList: isTrue(isReturnList),
-			NoParams:     isTrue(noParams),
-		}
-		if repo.NoParams {
-			repo.ISByID = false
-		}
-		err = repo.InsertRepo()
-		if err != nil {
-			log.Fatalln("❎ 添加repo代码错误", err)
-		}
-		log.Println("✅ ", apiFunc, "生成代码添加成功👌！")
-		fmt.Println(`程序优化我心欢😊，
-携手同行路更宽🛣️；
-你我共勉心相连🤝，
-共创辉煌乐无边🎉。`)
 	},
+}
+
+func addApiHandle(infoChan chan<- pkg.CommandInfo) {
+	defer close(infoChan) // 确保在函数返回时关闭通道
+	if name == "" || method == "" || apiFunc == "" {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴args is empty... 什么? 需要帮助? fuxi api:add -h 可以帮到你!", Error: nil}
+		return
+	}
+
+	if api == "" {
+		api = strings.ToLower(apiFunc)
+	}
+
+	apiAdd := addapi.AddApi{
+		Name:         name,
+		FilePath:     fmt.Sprintf("%s/%s/%s.go", routerPath, name, name),
+		Method:       strings.ToUpper(method),
+		Api:          api,
+		ApiFunc:      apiFunc,
+		ISByID:       isTrue(iSByID),
+		IsReturnList: isTrue(isReturnList),
+		NoParams:     isTrue(noParams),
+	}
+	if apiAdd.NoParams {
+		apiAdd.ISByID = false
+	}
+
+	err := apiAdd.InsertRouter()
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加路由代码错误", Error: err}
+	} else {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加路由代码成功", Error: err}
+	}
+
+	apiAdd.FilePath = fmt.Sprintf("%s/%s/%s.go", apiPath, name, name)
+	err = apiAdd.InsertApiHandle()
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加ApiHandle代码错误", Error: err}
+	} else {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加ApiHandle代码成功", Error: err}
+	}
+	//添加service
+	sv := addService.AddService{
+		Name:         name,
+		FilePath:     fmt.Sprintf("%s/%s/%s.go", servicePath, name, name),
+		Method:       strings.ToUpper(method),
+		Api:          api,
+		ApiFunc:      apiFunc,
+		ReturnType:   returnType,
+		ISByID:       isTrue(iSByID),
+		IsReturnList: isTrue(isReturnList),
+		NoParams:     isTrue(noParams),
+	}
+	if sv.NoParams {
+		sv.ISByID = false
+	}
+	err = sv.InsertService()
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加service代码错误", Error: err}
+	} else {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加service代码成功", Error: err}
+	}
+
+	repo := addRepo.AddRepo{
+		Name:         name,
+		FilePath:     fmt.Sprintf("%s/%s/%s.go", repoPath, name, name),
+		Method:       strings.ToUpper(method),
+		Api:          api,
+		ApiFunc:      apiFunc,
+		ReturnType:   returnType,
+		ISByID:       isTrue(iSByID),
+		IsReturnList: isTrue(isReturnList),
+		NoParams:     isTrue(noParams),
+	}
+	if repo.NoParams {
+		repo.ISByID = false
+	}
+	err = repo.InsertRepo()
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加repo代码错误", Error: err}
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 似乎啥也没干 就下班了!!!", Error: nil}
+	} else {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加repo代码成功", Error: nil}
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 生成" + apiFunc + "代码添加成功👌！", Error: nil}
+		infoChan <- pkg.CommandInfo{Message: gushi, Error: nil}
+	}
 }
 
 func init() {
@@ -117,12 +189,10 @@ func init() {
 	AddApiCmd.Flags().StringVarP(&method, "method", "m", method, "请求方法:GET,POST,DELETE,PUT")
 	AddApiCmd.Flags().StringVarP(&api, "api", "a", api, "api路由路径")
 	AddApiCmd.Flags().StringVarP(&apiFunc, "apiFunc", "f", apiFunc, "方法签名")
-
 	AddApiCmd.Flags().StringVarP(&apiPath, "apiPath", "p", apiPath, "api文件路径")
 	AddApiCmd.Flags().StringVarP(&routerPath, "routerPath", "r", routerPath, "路由文件路径")
 	AddApiCmd.Flags().StringVarP(&servicePath, "servicePath", "s", servicePath, "service文件路径")
 	AddApiCmd.Flags().StringVarP(&repoPath, "repoPath", "d", repoPath, "repo文件路径")
-
 	AddApiCmd.Flags().StringVarP(&iSByID, "isByID", "i", "true", "入参为ID ")
 	AddApiCmd.Flags().StringVarP(&isReturnList, "list", "l", "false", "是否返回list列表 ")
 	AddApiCmd.Flags().StringVarP(&noParams, "noParams", "o", "false", "是否无参数 ")

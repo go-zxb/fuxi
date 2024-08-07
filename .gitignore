@@ -10,6 +10,7 @@
 build/
 json/
 fuxi_dev.yaml
+zm/
 
 # Test binary, built with `go test -c`
 *.test

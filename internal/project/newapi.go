@@ -1,6 +1,7 @@
 package project
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	newapi "github.com/go-zxb/fuxi/internal/ast/new"
@@ -60,10 +61,20 @@ var NewApiCmd = &cobra.Command{
 	Short:   "一键生成xxCRUD代码",
 	Long:    "一键生成xxCRUD代码",
 	Example: "生成一个用户CRUD→ fuxi api:new user",
-	Run:     createCode,
+	Run: func(cmd *cobra.Command, args []string) {
+		infoChan := make(chan pkg.CommandInfo)
+		go createCodeHandle(infoChan)
+		for info := range infoChan {
+			if info.Error != nil {
+				log.Fatalln("❌", info.Message, info.Error.Error())
+			} else {
+				log.Println(info.Message)
+			}
+		}
+	},
 }
 
-func handleArgs() *model.CodeModel {
+func handleArgs(infoChan chan<- pkg.CommandInfo) *model.CodeModel {
 	jsonStr := ""
 	var err error
 
@@ -71,6 +82,8 @@ func handleArgs() *model.CodeModel {
 		Fields: make([]*model.GenCodeStruct, 0),
 	}
 
+	fmt.Println(filename != "" && localJson == "true")
+	fmt.Println(filename, localJson)
 	if filename != "" && localJson == "true" {
 		_, err = os.Stat("docs/json/" + filename + ".json")
 		if err == nil {
@@ -89,6 +102,7 @@ func handleArgs() *model.CodeModel {
 	}
 
 	if len(genCode.Fields) == 0 {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴 别急...正在疯狂的和Ai生产数据...", Error: nil}
 		log.Println("➡️你的需求是: ", question)
 		genCode, jsonStr, err = gpt.GenCode(question)
 		if err != nil {
@@ -113,6 +127,7 @@ func handleArgs() *model.CodeModel {
 			_ = tmpl.Execute(file, nil)
 		}
 	} else {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴 读取本地json数据超过", Error: nil}
 		if filename == "" {
 			filename = strings.ToLower(genCode.StructName)
 		}
@@ -121,14 +136,17 @@ func handleArgs() *model.CodeModel {
 }
 
 // createCode 创建代码
-func createCode(cmd *cobra.Command, args []string) {
-	packagename, err := base.GetModuleName("go.mod")
+func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
+	defer close(infoChan) // 确保在函数返回时关闭通道
+	packagename, err := pkg.GetModuleName("go.mod")
 	if err != nil {
-		log.Fatalln("❗️请先初始化项目: fuxi project -n 项目名称")
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️请先初始化项目: fuxi project -n 项目名称", Error: err}
+		return
 	}
 
 	if pkg.HasChinese(filename) {
-		log.Fatalln("------❎ 名称不能包含中文❎--------")
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗------❎ 名称不能包含中文❎--------", Error: nil}
+		return
 	}
 
 	var genCode = &model.CodeModel{
@@ -136,10 +154,11 @@ func createCode(cmd *cobra.Command, args []string) {
 	}
 
 	if !isTrue(empty) {
-		genCode = handleArgs()
+		genCode = handleArgs(infoChan)
 	} else {
 		if filename == "" {
-			log.Fatalln("------❎ 名称不可为空❎--------")
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗------❎ 名称不可为空❎--------", Error: nil}
+			return
 		}
 		genCode.Table = strings.ToLower(filename)
 	}
@@ -162,7 +181,7 @@ func createCode(cmd *cobra.Command, args []string) {
 		goFilePaht := fmt.Sprintf("%s/%s/%s%s", data.FilePath, data.FileName, data.FileName, data.FileExtension)
 		//文件是否存在
 		_, err = os.Stat(goFilePaht)
-		if err == nil {
+		if err == nil && isWeb == false {
 			//debug模式先删掉文件
 			if isTrue(debug) {
 				if ok == "n" {
@@ -185,19 +204,24 @@ func createCode(cmd *cobra.Command, args []string) {
 				//跳过 继续执行下一个文件
 				continue
 			}
+		} else if err == nil && isWeb {
+			_ = os.Remove(goFilePaht)
+		} else if err == nil {
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️ " + data.FilePath + "文件已存在", Error: err}
+			return
 		}
 
 		//创建文件夹
 		err = os.MkdirAll(fmt.Sprintf("%s/%s", data.FilePath, data.FileName), 0750)
 		if err != nil {
-			log.Println(err)
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️创建所需文件夹失败", Error: err}
 		}
 		//log.Println("🫎文件路径:", goFilePaht)
 		slicePath = append(slicePath, goFilePaht)
 		//生成代码
 		err = TmplExecute(packagename, goFilePaht, data, genCode)
 		if err != nil {
-			log.Println(err)
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️生成代码渲染失败", Error: err}
 			//如果失败一个 就删除已生成的文件
 			for _, s := range slicePath {
 				_ = os.Remove(s)
@@ -208,12 +232,13 @@ func createCode(cmd *cobra.Command, args []string) {
 			_ = FormatGoCode(goFilePaht)
 		}
 		isOK = true
-		log.Println("✅", goFilePaht, "文件创建成功👌！")
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅" + goFilePaht + "文件创建成功👌！", Error: nil}
 	}
 
 	if !isOK {
 		//没有生成任何文件
-		log.Fatalln("⚠️❎ 相关代码文件已存在，生成失败！")
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗⚠️❎ 相关代码文件已存在，生成失败！", Error: nil}
+		return
 	}
 
 	InsertInitRouterCode(packagename)
@@ -221,22 +246,42 @@ func createCode(cmd *cobra.Command, args []string) {
 	InsertSetDB(packagename)
 
 	//运行mod tidy
+	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :好的 正在马上执行 go mod tidy...", Error: nil}
 	err = pkg.RunCommand("go", "mod", "tidy")
 	if err != nil {
-		log.Fatalln("failed to mod tidy:", err)
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️拉取依赖错误", Error: err}
+		return
 	}
-	log.Println("✅ :执行 go mod tidy 成功👌")
+	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :执行 go mod tidy 成功👌", Error: nil}
 
 	//运行gormGen生成gen代码
 	err = pkg.RunCommandNoOutput("go", "run", gormGenPath+"/main.go")
 	if err != nil {
-		log.Fatalln("❎ Error ", err)
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗行gormGenBuild生成gen代码失败", Error: err}
+		return
 	}
-	log.Println("✅ :执行", gormGenPath, "/main.go", "生成gen代码成功👌！")
-	fmt.Println(`代码精妙我自豪😎，
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	modChan := make(chan pkg.CommandInfo)
+	go pkg.RunCommandChannel(ctx, modChan, "go", "run", gormGenPath+"/main.go")
+	for info := range modChan {
+		if info.Error != nil {
+			infoChan <- pkg.CommandInfo{Message: "❌ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 行gormGenBuild生成gen代码失败 " + info.Message, Error: info.Error}
+			cancel()
+			return
+		}
+		if info.Message == "命令执行成功" {
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗✅ :执行" + gormGenPath + "main.go 生成gen代码成功👌！", Error: nil}
+		} else {
+			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
+		}
+	}
+
+	gushi := `代码精妙我自豪😎，
 分享经验乐陶陶😄；
 你我同欢心相照👫，
-共筑梦想乐逍遥🌟。`)
+共筑梦想乐逍遥🌟。`
+	infoChan <- pkg.CommandInfo{Message: gushi, Error: nil}
 }
 
 // TmplExecute 模板渲染

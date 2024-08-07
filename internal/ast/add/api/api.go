@@ -1,6 +1,7 @@
 package addapi
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
@@ -117,10 +118,12 @@ func (a *AddApi) InsertRouter() error {
 	if !hasInsert || !apiHasInsert {
 		err = a.FuXiAst.SaveNode(node, fset, a.FilePath)
 		if err != nil {
-			log.Println("✅ AddApi 生成代码写入文件时出错:", err)
+			log.Println("✅ 生成路由代码写入文件时出错:", err)
 			return err
 		}
-		log.Println("✅ AddApi 生成代码成功。")
+		log.Println("✅  生成路由代码成功。")
+	} else {
+		return errors.New("路由接口已经存在")
 	}
 
 	return nil

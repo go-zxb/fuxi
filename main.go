@@ -91,6 +91,7 @@ func init() {
 	rootCmd.AddCommand(project.AddApiCmd)
 	rootCmd.AddCommand(project.NewProjectCmd)
 	rootCmd.AddCommand(project.NewApiCmd)
+	rootCmd.AddCommand(project.SSEWebCmd)
 	rootCmd.AddCommand(openapi.OpenapiCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(genCmd)
