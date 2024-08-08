@@ -74,6 +74,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	addProjectCodePath("json_default.go", "pkg/json", "json_default", ".go")
 	addProjectCodePath("redis.go", "core/data", "redis", ".go")
 	addProjectCodePath("cors.go", "middleware", "cors", ".go")
+	addProjectCodePath("docs.go", "docs/openapi", "docs", ".go")
 
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"

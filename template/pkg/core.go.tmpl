@@ -7,6 +7,9 @@ import (
 	"{{.ModuleName}}/config"
 	"{{.ModuleName}}/middleware"
 	"{{.ModuleName}}/core/data"
+	_ "app/docs/openapi"
+	swagFiles "github.com/swaggo/files"
+  ginSwag "github.com/swaggo/gin-swagger"
 	"log"
 )
 
@@ -60,6 +63,7 @@ func (d *GinServer) initGinServer()  {
 	engine := gin.Default()
 	engine.Use(middleware.Cors())
 	InitRouter(engine)
+	engine.GET("/openapi/*any", ginSwag.WrapHandler(swagFiles.Handler))
 	if err := engine.Run(fmt.Sprintf("%s:%d", d.c.Gin.Host, d.c.Gin.Port));err != nil {
   		log.Fatalln("❎ 服务启动失败:", err)
   	}

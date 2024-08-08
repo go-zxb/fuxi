@@ -20,7 +20,6 @@ import (
 type Tag struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Tag         []Tag
 }
 
 type OpenAPIDoc struct {
@@ -80,7 +79,10 @@ type Schema struct {
 }
 
 type SecurityScheme struct {
-	Type string `json:"type"`
+	Type   string `json:"type"`
+	Scheme string `json:"scheme,omitempty"`
+	Name   string `json:"name,omitempty"`
+	In     string `json:"in"`
 }
 
 type Server struct {
@@ -167,7 +169,7 @@ func walkToGetRoute(path string) {
 func generateOpenAPIDoc() string {
 	conf := config.GetConfig()
 	doc := OpenAPIDoc{
-		OpenAPI: "3.1.0",
+		OpenAPI: "3.0.0",
 		Info: struct {
 			Title       string `json:"title"`
 			Description string `json:"description"`
@@ -241,6 +243,11 @@ func generateOpenAPIDoc() string {
 		if structName == "" {
 			structName = route.Handler
 		}
+		operation.Security = []map[string][]string{
+			{
+				"Authorization": {},
+			},
+		}
 		switch route.Method {
 		case "GET", "DELETE":
 			if strings.Contains(route.Path, "/:id") {
@@ -298,6 +305,14 @@ func generateOpenAPIDoc() string {
 			Name:        tag,
 			Description: fmt.Sprintf("%s", tag),
 		})
+	}
+
+	doc.Components.SecuritySchemes = map[string]SecurityScheme{
+		"Authorization": {
+			Type: "apiKey",
+			Name: "Token",
+			In:   "header",
+		},
 	}
 
 	jsonData, err := json.MarshalIndent(doc, "", "  ")

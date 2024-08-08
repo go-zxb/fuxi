@@ -19,6 +19,7 @@ type Config struct {
 	Gin    Gin    `mapstructure:"gin" json:"gin" yaml:"gin"`
 	Jwt    Jwt    `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
 	Redis  Redis  `mapstructure:"redis" json:"redis" yaml:"redis"`
+	DocsServers []DocsServer `yaml:"docs_servers"`
 	viper    *viper.Viper
 }
 
@@ -31,6 +32,11 @@ type System struct {
 	Name        string `mapstructure:"name" json:"name" yaml:"name"`
 	Version     string `mapstructure:"version" json:"version" yaml:"version"`
 	Description string `mapstructure:"description" json:"description" yaml:"description"`
+}
+
+type DocsServer struct {
+	URL         string `yaml:"url"`
+	Description string `yaml:"description"`
 }
 
 type Gin struct {
