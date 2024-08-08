@@ -18,6 +18,8 @@ func New{{.StructName | initialLetter}}Api(sv *service.{{.StructName | initialLe
 }
 
 // Create{{.StructName | initialLetter}} 创建{{.StructName}}
+// @model model.{{.StructName | initialLetter}}
+// @auth true
 func (a *{{.StructName | initialLetter}}Api) Create{{.StructName | initialLetter}}(ctx *gin.Context) {
 	var oo model.{{.StructName | initialLetter}}
 	if err := ctx.ShouldBindJSON(&oo); err != nil {
@@ -33,6 +35,8 @@ func (a *{{.StructName | initialLetter}}Api) Create{{.StructName | initialLetter
 }
 
 // Update{{.StructName | initialLetter}}  更新{{.StructName}}
+// @model model.{{.StructName | initialLetter}}
+// @auth true
 func (a *{{.StructName | initialLetter}}Api) Update{{.StructName | initialLetter}}(ctx *gin.Context) {
 	var oo model.{{.StructName | initialLetter}}
 	if err := ctx.ShouldBindJSON(&oo); err != nil {
@@ -48,6 +52,7 @@ func (a *{{.StructName | initialLetter}}Api) Update{{.StructName | initialLetter
 }
 
 // Get{{.StructName | initialLetter}} 获取{{.StructName}}ByID
+// @auth true
 func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}(ctx *gin.Context) {
 	id := strconvx.StringToUint(ctx.Param("id"))
 	if id == 0 {
@@ -63,6 +68,7 @@ func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}(
 }
 
 // Get{{.StructName | initialLetter}}List  获取{{.StructName}}列表
+// @auth true
 func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}List(ctx *gin.Context) {
 	var oo model.{{.StructName | initialLetter}}Query
 	if err := ctx.ShouldBindQuery(&oo); err != nil {
@@ -78,6 +84,7 @@ func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}L
 }
 
 // Delete{{.StructName | initialLetter}} 删除{{.StructName}}
+// @auth true
 func (a *{{.StructName | initialLetter}}Api) Delete{{.StructName | initialLetter}}(ctx *gin.Context) {
 	id := strconvx.StringToUint(ctx.Param("id"))
 	if id == 0 {

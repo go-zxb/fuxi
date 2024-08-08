@@ -44,7 +44,7 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 	})
 
 	// 处理 SSE 请求
-	r.GET("/create", createProject)
+	r.GET("/createProject", createProject)
 	r.GET("/addApi", addApi)
 	r.GET("/newApi", newApi)
 	r.GET("/getModel", getModel)
