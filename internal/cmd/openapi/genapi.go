@@ -234,20 +234,24 @@ func generateOpenAPIDoc() string {
 				},
 			},
 			Security: []map[string][]string{},
-		} // 根据 handler 名称添加 requestBody
+		}
 
-		findStruct, structName, err := findfield.FindStruct(route.Handler)
+		findStruct, structName, auth, err := findfield.FindStruct(route.Handler)
 		if err != nil {
 			log.Fatalln("❌", err.Error())
 		}
 		if structName == "" {
 			structName = route.Handler
 		}
-		operation.Security = []map[string][]string{
-			{
-				"Authorization": {},
-			},
+		cmmSlice := strings.Split(auth, " ")
+		if len(cmmSlice) > 0 && strings.TrimSpace(cmmSlice[len(cmmSlice)-1:][0]) == "true" {
+			operation.Security = []map[string][]string{
+				{
+					"Authorization": {},
+				},
+			}
 		}
+
 		switch route.Method {
 		case "GET", "DELETE":
 			if strings.Contains(route.Path, "/:id") {

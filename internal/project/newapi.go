@@ -127,7 +127,7 @@ func handleArgs(infoChan chan<- pkg.CommandInfo) *model.CodeModel {
 			_ = tmpl.Execute(file, nil)
 		}
 	} else {
-		infoChan <- pkg.CommandInfo{Message: "🐮🐴 读取本地json数据超过", Error: nil}
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴 读取本地json数据成功", Error: nil}
 		if filename == "" {
 			filename = strings.ToLower(genCode.StructName)
 		}

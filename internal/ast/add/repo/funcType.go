@@ -43,7 +43,16 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 	return q.Find()
 }
 `
-	bodyQueryByIDFirst1 := `
+	bodyQueryListNoParamsReturnList := `
+package main
+func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
+	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
+	q := Q.Where()
+	return q.Find()
+}
+`
+
+	bodyQueryNoParamsReturnObj := `
 package main
 func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
 	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
@@ -52,7 +61,16 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 }
 `
 
-	bodyQueryByIDFirst2 := `
+	bodyQueryByIDFirst := `
+package main
+func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
+	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
+	q := Q.Where(Q.ID.Eq(id))
+	return q.First()
+}
+`
+
+	bodyQueryByIDStr := `
 package main
 func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
 	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
@@ -65,7 +83,7 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 }
 `
 
-	bodyQueryByIDFirst3 := `
+	bodyQueryByIDCount := `
 package main
 func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
 	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
@@ -80,15 +98,6 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
 	q := Q.Where(Q.ID.Eq(` + a.Name + `.ID))
 	return q.First()
-}
-`
-
-	bodyQueryNoParams := `
-package main
-func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
-	//Q := r.Q.` + pkg.InitialLetter(a.Name) + `
-	//q := Q.Where()
-	return "",nil
 }
 `
 
@@ -108,12 +117,12 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 				a.bodyCode = bodyQueryByIDList
 			} else {
 				if a.ReturnType == "obj" {
-					a.bodyCode = bodyQueryByIDFirst1
+					a.bodyCode = bodyQueryByIDFirst
 				} else {
 					if goReturnType(a.ReturnType) == "0" {
-						a.bodyCode = bodyQueryByIDFirst3
+						a.bodyCode = bodyQueryByIDCount
 					} else {
-						a.bodyCode = bodyQueryByIDFirst2
+						a.bodyCode = bodyQueryByIDStr
 					}
 				}
 
@@ -122,7 +131,18 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 			//入参Query对象 可包含更多查询字段
 			if a.NoParams {
 				a.funcType = base.QueryNoParams(a.IsReturnList, a.Name, a.ReturnType)
-				a.bodyCode = bodyQueryNoParams
+				if a.IsReturnList {
+					a.bodyCode = bodyQueryListNoParamsReturnList
+				} else if a.ReturnType == "obj" {
+					a.bodyCode = bodyQueryNoParamsReturnObj
+				} else {
+					if goReturnType(a.ReturnType) == "0" {
+						a.bodyCode = bodyQueryByIDCount
+					} else {
+						a.bodyCode = bodyQueryByIDStr
+					}
+				}
+
 			} else {
 				a.funcType = base.QueryByObj(a.IsReturnList, a.Name, a.ReturnType)
 				if a.IsReturnList {

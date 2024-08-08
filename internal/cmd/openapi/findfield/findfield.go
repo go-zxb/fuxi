@@ -22,16 +22,20 @@ type FiledInfo struct {
 }
 
 // FindStruct 查找方法名是否存在并获取结构体字段
-func FindStruct(funcName string) (files []*FiledInfo, structName string, err error) {
+func FindStruct(funcName string) (files []*FiledInfo, structName, auth string, err error) {
 	err = filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			comments := FunctionComments(path, funcName)
-			if comments == "" {
+			var modelComment string
+			modelComment, auth = FunctionComments(path, funcName)
+			if modelComment == "" {
+				if auth != "" {
+					return filepath.SkipAll
+				}
 				return nil
 			}
 			//处理注释
-			//index := strings.Index(comments, "@model")
-			cmmSlice := strings.Split(comments, " ")
+			//index := strings.Index(modelComment, "@model")
+			cmmSlice := strings.Split(modelComment, " ")
 			slice := strings.Split(cmmSlice[len(cmmSlice)-1:][0], ".")
 			//获取结构体字段
 			fields, _ := GetStruct(".", slice...)
@@ -48,11 +52,11 @@ func FindStruct(funcName string) (files []*FiledInfo, structName string, err err
 	if err != nil {
 		log.Fatalln("❌", err.Error())
 	}
-	return
+	return files, structName, auth, nil
 }
 
 // FunctionComments 获取注释
-func FunctionComments(path string, funcName string) (val string) {
+func FunctionComments(path string, funcName string) (val, auth string) {
 
 	// 创建一个新的文件集
 	fset := token.NewFileSet()
@@ -72,7 +76,9 @@ func FunctionComments(path string, funcName string) (val string) {
 				for _, comment := range x.Doc.List {
 					if strings.Contains(comment.Text, "@model") {
 						val = comment.Text
-						return false
+					}
+					if strings.Contains(comment.Text, "@auth") {
+						auth = comment.Text
 					}
 
 				}
