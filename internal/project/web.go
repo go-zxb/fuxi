@@ -3,13 +3,15 @@ package project
 import (
 	"encoding/json"
 	"fmt"
+	ginstatic "github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/go-zxb/fuxi/config"
 	"github.com/go-zxb/fuxi/middleware"
 	"github.com/go-zxb/fuxi/pkg"
+	"github.com/go-zxb/fuxi/static"
 	"github.com/spf13/cobra"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -42,13 +44,18 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 	})
 
 	// 处理 SSE 请求
-	r.GET("/createProject", createProject)
+	r.GET("/create", createProject)
 	r.GET("/addApi", addApi)
 	r.GET("/newApi", newApi)
-
-	conf := config.GetConfig()
-
-	r.Run(fmt.Sprintf("%s:%d", conf.Gin.Host, conf.Gin.Port))
+	r.GET("/getModel", getModel)
+	r.NoRoute(func(c *gin.Context) {
+		c.File(os.TempDir() + "/fuxi/index.html")
+	})
+	static.WriteStaticFiles()
+	r.Use(ginstatic.ServeRoot("/", os.TempDir()+"/fuxi"))
+	r.Use(ginstatic.ServeRoot("/assets", os.TempDir()+"/fuxi/assets"))
+	log.Println("✅", " web 服务启动成功,运行地址：http://127.0.0.1:8066", "👌")
+	r.Run(fmt.Sprintf("%s:%d", "", 8066))
 }
 
 type Args struct {
@@ -65,6 +72,23 @@ type Args struct {
 	ReturnType   string `form:"returnType" json:"returnType,omitempty"`
 	RouterPath   string `form:"routerPath" json:"routerPath,omitempty"`
 	ServicePath  string `form:"servicePath" json:"servicePath,omitempty"`
+}
+
+func getModel(ctx *gin.Context) {
+	dir := "internal/model"
+	var dirs = ""
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"data": ""})
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirs += entry.Name() + ","
+		}
+	}
+	ctx.JSON(http.StatusOK, gin.H{"data": dirs[:len(dirs)-1]})
 }
 
 func addApi(ctx *gin.Context) {
