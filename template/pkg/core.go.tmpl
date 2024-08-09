@@ -2,6 +2,12 @@ package core
 
 import (
 	"fmt"
+	"context"
+	"errors"
+	"os"
+	"os/signal"
+  "syscall"
+  "net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"{{.ModuleName}}/config"
@@ -64,9 +70,31 @@ func (d *GinServer) initGinServer()  {
 	engine.Use(middleware.Cors())
 	InitRouter(engine)
 	engine.GET("/openapi/*any", ginSwag.WrapHandler(swagFiles.Handler))
-	if err := engine.Run(fmt.Sprintf("%s:%d", d.c.Gin.Host, d.c.Gin.Port));err != nil {
-  		log.Fatalln("❎ 服务启动失败:", err)
+
+  // 启动 Gin 服务器
+  	srv := &http.Server{
+  		Addr:    fmt.Sprintf("%s:%d", d.c.Gin.Host, d.c.Gin.Port),
+  		Handler: engine,
   	}
+
+  	go func() {
+  		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+  				log.Fatalln("❎ 服务启动失败:", err)
+  		}
+  	}()
+
+  	// 捕获 SIGINT 信号
+    	quit := make(chan os.Signal, 1)
+    	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    	<-quit
+    	log.Println("关闭服务器中...")
+
+    	// 优雅关闭服务器
+    	if err := srv.Shutdown(context.Background()); err != nil {
+    		log.Fatal("服务器已被迫关闭:", err)
+    	}
+
+    	log.Println("服务器退出")
 }
 
 func InitRouter(engine *gin.Engine) {

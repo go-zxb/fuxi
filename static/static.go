@@ -2,7 +2,6 @@ package static
 
 import (
 	"embed"
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -57,14 +56,8 @@ func writeDir(fsys fs.FS, embeddedPath, localPath string) error {
 	return nil
 }
 
-func WriteStaticFiles() {
-	localDir := os.TempDir()
-	_, err := os.Stat(localDir + "/fuxi/index.html")
-	if err == nil {
-		return
+func WriteStaticFiles(localDir string) {
+	if err := writeDir(StaticFile, "dist", localDir); err != nil {
+		log.Fatal("写入静态文件到本地目录时出错:", err)
 	}
-	if err := writeDir(StaticFile, "dist", localDir+"/fuxi"); err != nil {
-		log.Fatal("Error writing directory1:", err)
-	}
-	fmt.Println("Static files written to", localDir+"/fuxi")
 }

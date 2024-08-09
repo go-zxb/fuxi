@@ -1,7 +1,9 @@
 package project
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	ginstatic "github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -12,6 +14,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -48,14 +52,43 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 	r.GET("/addApi", addApi)
 	r.GET("/newApi", newApi)
 	r.GET("/getModel", getModel)
+	r.GET("/getModName", getModName)
 	r.NoRoute(func(c *gin.Context) {
 		c.File(os.TempDir() + "/fuxi/index.html")
 	})
-	static.WriteStaticFiles()
+
+	localDir := os.TempDir()
+	localDir += "/fuxi"
+	defer os.RemoveAll(localDir)
+	static.WriteStaticFiles(localDir)
 	r.Use(ginstatic.ServeRoot("/", os.TempDir()+"/fuxi"))
 	r.Use(ginstatic.ServeRoot("/assets", os.TempDir()+"/fuxi/assets"))
 	log.Println("✅", " web 服务启动成功,运行地址：http://127.0.0.1:8066", "👌")
-	r.Run(fmt.Sprintf("%s:%d", "", 8066))
+
+	// 启动 Gin 服务器
+	srv := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", "", 8066),
+		Handler: r,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	// 捕获 SIGINT 信号
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	// 优雅关闭服务器
+	if err := srv.Shutdown(context.Background()); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exiting")
 }
 
 type Args struct {
@@ -72,6 +105,15 @@ type Args struct {
 	ReturnType   string `form:"returnType" json:"returnType,omitempty"`
 	RouterPath   string `form:"routerPath" json:"routerPath,omitempty"`
 	ServicePath  string `form:"servicePath" json:"servicePath,omitempty"`
+}
+
+func getModName(ctx *gin.Context) {
+	mod, err := pkg.GetModuleName("go.mod")
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"data": ""})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"data": mod})
 }
 
 func getModel(ctx *gin.Context) {
