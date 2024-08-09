@@ -65,7 +65,7 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 	r.Use(ginstatic.ServeRoot("/assets", os.TempDir()+"/fuxi/assets"))
 	log.Println("✅", " web 服务启动成功,运行地址：http://127.0.0.1:8066", "👌")
 
-	// 启动 Gin 服务器
+	// 启动 GinWeb 服务
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", "", 8066),
 		Handler: r,
@@ -73,7 +73,7 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
+			log.Fatalf("启动web服务失败: %s\n", err)
 		}
 	}()
 
@@ -81,14 +81,14 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	log.Println("关闭web服务中...")
 
-	// 优雅关闭服务器
+	// 优雅关闭服务
 	if err := srv.Shutdown(context.Background()); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+		log.Fatal("web服务已被迫关闭:", err)
 	}
 
-	log.Println("Server exiting")
+	log.Println("web服务已退出")
 }
 
 type Args struct {
@@ -236,7 +236,7 @@ func newApi(ctx *gin.Context) {
 	}
 
 	if isTrue(ctx.Query("debug")) {
-		isWeb = true
+		isWebDebug = true
 	}
 
 	if val := ctx.Query("apiPath"); val != "" {
@@ -306,7 +306,7 @@ func createProject(ctx *gin.Context) {
 	log.Println("✅", name_, "👌")
 	projectName = name_
 	if isTrue(debug_) {
-		isWeb = true
+		isWebDebug = true
 	}
 
 	log.Println("✅", name, "👌")

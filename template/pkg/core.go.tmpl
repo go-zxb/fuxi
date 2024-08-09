@@ -71,7 +71,7 @@ func (d *GinServer) initGinServer()  {
 	InitRouter(engine)
 	engine.GET("/openapi/*any", ginSwag.WrapHandler(swagFiles.Handler))
 
-  // 启动 Gin 服务器
+  // 启动 Gin 服务
   	srv := &http.Server{
   		Addr:    fmt.Sprintf("%s:%d", d.c.Gin.Host, d.c.Gin.Port),
   		Handler: engine,
@@ -87,14 +87,14 @@ func (d *GinServer) initGinServer()  {
     	quit := make(chan os.Signal, 1)
     	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
     	<-quit
-    	log.Println("关闭服务器中...")
+    	log.Println("关闭服务中...")
 
-    	// 优雅关闭服务器
+    	// 优雅关闭服务
     	if err := srv.Shutdown(context.Background()); err != nil {
-    		log.Fatal("服务器已被迫关闭:", err)
+    		log.Fatal("服务已被迫关闭:", err)
     	}
 
-    	log.Println("服务器退出")
+    	log.Println("服务已退出")
 }
 
 func InitRouter(engine *gin.Engine) {

@@ -188,20 +188,14 @@ func generateOpenAPIDoc() string {
 			Schemas:         make(map[string]Schema),
 			SecuritySchemes: make(map[string]SecurityScheme),
 		},
-		Servers: []Server{
-			{
-				URL:         "http://127.0.0.1:8080/api/v1",
-				Description: "开发环境",
-			},
-			{
-				URL:         "http://127.0.0.1:8081/api/v1",
-				Description: "测试环境",
-			},
-			{
-				URL:         "http://127.0.0.1:8082/api/v1",
-				Description: "生产环境",
-			},
-		},
+		Servers: []Server{},
+	}
+
+	for _, server := range conf.DocsServers {
+		doc.Servers = append(doc.Servers, Server{
+			URL:         server.URL,
+			Description: server.Description,
+		})
 	}
 
 	for _, route := range routes {

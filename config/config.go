@@ -21,13 +21,14 @@ func GetConfig() *Config {
 }
 
 type Config struct {
-	System System `mapstructure:"system" json:"system" yaml:"system"`
-	Mysql  Mysql  `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
-	Gin    Gin    `mapstructure:"gin" json:"gin" yaml:"gin"`
-	Jwt    Jwt    `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
-	Redis  Redis  `mapstructure:"redis" json:"redis" yaml:"redis"`
-	GPT    GPT    `mapstructure:"gpt" json:"gpt" yaml:"gpt"`
-	viper  *viper.Viper
+	System      System       `mapstructure:"system" json:"system" yaml:"system"`
+	Mysql       Mysql        `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
+	Gin         Gin          `mapstructure:"gin" json:"gin" yaml:"gin"`
+	Jwt         Jwt          `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
+	Redis       Redis        `mapstructure:"redis" json:"redis" yaml:"redis"`
+	GPT         GPT          `mapstructure:"gpt" json:"gpt" yaml:"gpt"`
+	DocsServers []DocsServer `mapstructure:"docs_servers" json:"docs_servers" yaml:"docs_servers"`
+	viper       *viper.Viper
 }
 
 func NewConfig(filePath string) (*Config, error) {
@@ -39,6 +40,11 @@ type System struct {
 	Name        string `mapstructure:"name" json:"name" yaml:"name"`
 	Version     string `mapstructure:"version" json:"version" yaml:"version"`
 	Description string `mapstructure:"description" json:"description" yaml:"description"`
+}
+
+type DocsServer struct {
+	URL         string `yaml:"url"`
+	Description string `yaml:"description"`
 }
 
 type Gin struct {

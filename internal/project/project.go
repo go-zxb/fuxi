@@ -17,7 +17,7 @@ import (
 var (
 	projectName = ""
 	debug       = ""
-	isWeb       = false
+	isWebDebug  = false
 )
 
 type Project struct {
@@ -93,7 +93,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 
 		//文件是否存在
 		_, err := os.Stat(goFilePaht)
-		if err == nil && isWeb == false {
+		if err == nil && isWebDebug == false {
 			//debug模式先删掉文件
 			if isTrue(debug) {
 				if ok == "n" {
@@ -123,7 +123,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 			} else {
 				continue
 			}
-		} else if err == nil && isWeb {
+		} else if err == nil && isWebDebug {
 			//删除之前先把能涉及到的文件备份压缩
 			if !isZip {
 				err = zipProjectCode()

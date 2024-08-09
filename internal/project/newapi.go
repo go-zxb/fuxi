@@ -184,7 +184,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 		goFilePaht := fmt.Sprintf("%s/%s/%s%s", data.FilePath, data.FileName, data.FileName, data.FileExtension)
 		//文件是否存在
 		_, err = os.Stat(goFilePaht)
-		if err == nil && isWeb == false {
+		if err == nil && isWebDebug == false {
 			//debug模式先删掉文件
 			if isTrue(debug) {
 				if ok == "n" {
@@ -216,7 +216,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 				//跳过 继续执行下一个文件
 				continue
 			}
-		} else if err == nil && isWeb {
+		} else if err == nil && isWebDebug {
 			//删除之前先把能涉及到的文件备份压缩
 			if !isZip {
 				err = zipModelCode()
@@ -227,9 +227,6 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 				isZip = true
 			}
 			_ = os.Remove(goFilePaht)
-		} else if err == nil {
-			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️ " + data.FilePath + "文件已存在", Error: err}
-			return
 		}
 
 		//创建文件夹
