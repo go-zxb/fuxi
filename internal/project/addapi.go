@@ -8,7 +8,10 @@ import (
 	"github.com/go-zxb/fuxi/pkg"
 	"github.com/spf13/cobra"
 	"log"
+	"os"
+	"path"
 	"strings"
+	"time"
 )
 
 var gushi = `程序优化我心欢😊，
@@ -122,8 +125,19 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	if apiAdd.NoParams {
 		apiAdd.ISByID = false
 	}
+	moduleName, err := pkg.GetModuleName("go.mod")
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 获取项目名称错误", Error: err}
+		return
+	}
+	zipFileName := fmt.Sprintf(".fuxi/%s/%s/%sBeforeCode/%s.zip", moduleName, name, apiFunc, time.Now().Format("20060102150405"))
+	err = BeforeCodeToZip(zipFileName, apiAdd.FilePath, fmt.Sprintf("%s/%s/%s.go", apiPath, name, name))
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+		return
+	}
 
-	err := apiAdd.InsertRouter()
+	err = apiAdd.InsertRouter()
 	if err != nil {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加路由代码错误", Error: err}
 	} else {
@@ -152,6 +166,13 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	if sv.NoParams {
 		sv.ISByID = false
 	}
+
+	err = BeforeCodeToZip(zipFileName, sv.FilePath)
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+		return
+	}
+
 	err = sv.InsertService()
 	if err != nil {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加service代码错误", Error: err}
@@ -173,6 +194,13 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	if repo.NoParams {
 		repo.ISByID = false
 	}
+
+	err = BeforeCodeToZip(zipFileName, repo.FilePath)
+	if err != nil {
+		infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+		return
+	}
+
 	err = repo.InsertRepo()
 	if err != nil {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加repo代码错误", Error: err}
@@ -204,4 +232,21 @@ func isTrue(v string) bool {
 		return true
 	}
 	return false
+}
+
+func BeforeCodeToZip(zipFileName string, apiCodePath ...string) error {
+
+	exists, err := pkg.PathExists(path.Dir(zipFileName))
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		err = os.MkdirAll(path.Dir(zipFileName), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	return pkg.FilesToZip(zipFileName, apiCodePath)
 }

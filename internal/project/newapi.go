@@ -14,9 +14,11 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"path"
 	"sort"
 	"strings"
 	"text/template"
+	"time"
 )
 
 // PathData 路径数据
@@ -177,6 +179,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 	var slicePath = make([]string, 0)
 	var ok = "n"
 	var isOK = false //判断是否有改动文件
+	isZip := false   //是否压缩啦
 	for _, data := range apiCodePath {
 		goFilePaht := fmt.Sprintf("%s/%s/%s%s", data.FilePath, data.FileName, data.FileName, data.FileExtension)
 		//文件是否存在
@@ -196,6 +199,15 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 				}
 
 				if ok == "Y" {
+					//删除之前先把能涉及到的文件备份压缩
+					if !isZip {
+						err = zipModelCode()
+						if err != nil {
+							infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+							return
+						}
+						isZip = true
+					}
 					_ = os.Remove(goFilePaht)
 				} else {
 					log.Fatalln("🚶‍♀️告辞🚶")
@@ -205,6 +217,15 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 				continue
 			}
 		} else if err == nil && isWeb {
+			//删除之前先把能涉及到的文件备份压缩
+			if !isZip {
+				err = zipModelCode()
+				if err != nil {
+					infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+					return
+				}
+				isZip = true
+			}
 			_ = os.Remove(goFilePaht)
 		} else if err == nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️ " + data.FilePath + "文件已存在", Error: err}
@@ -212,10 +233,20 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 		}
 
 		//创建文件夹
-		err = os.MkdirAll(fmt.Sprintf("%s/%s", data.FilePath, data.FileName), 0750)
+		exists, err := pkg.PathExists(fmt.Sprintf("%s/%s", data.FilePath, data.FileName))
 		if err != nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️创建所需文件夹失败", Error: err}
+			return
 		}
+
+		if !exists {
+			err = os.MkdirAll(fmt.Sprintf("%s/%s", data.FilePath, data.FileName), 0750)
+			if err != nil {
+				infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️创建所需文件夹失败", Error: err}
+				return
+			}
+		}
+
 		//log.Println("🫎文件路径:", goFilePaht)
 		slicePath = append(slicePath, goFilePaht)
 		//生成代码
@@ -422,4 +453,30 @@ func handleImport(data []*model.GenCodeStruct) map[string]string {
 // FormatGoCode 格式化Go代码
 func FormatGoCode(filePath string) error {
 	return pkg.RunCommand("gofmt", "-w", filePath)
+}
+
+func zipModelCode() error {
+	var goFilePaht []string
+	for _, data := range apiCodePath {
+		goFilePaht = append(goFilePaht, fmt.Sprintf("%s/%s/%s%s", data.FilePath, data.FileName, data.FileName, data.FileExtension))
+	}
+	moduleName, err := pkg.GetModuleName("go.mod")
+	if err != nil {
+		return err
+	}
+
+	zipFileName := fmt.Sprintf(".fuxi/%s/%s/%s.zip", moduleName, filename, time.Now().Format("20060102150405"))
+	exists, err := pkg.PathExists(path.Dir(zipFileName))
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		err = os.MkdirAll(path.Dir(zipFileName), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	return pkg.FilesToZip(zipFileName, goFilePaht)
 }

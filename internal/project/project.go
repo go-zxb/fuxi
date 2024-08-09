@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"path"
 	"text/template"
+	"time"
 )
 
 var (
@@ -79,6 +81,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"
 	isOk := false
+	isZip := false
 	for _, data := range projectCodePath {
 
 		goFilePaht := ""
@@ -105,6 +108,14 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 				}
 
 				if ok == "Y" {
+					//删除之前先把能涉及到的文件备份压缩
+					if !isZip {
+						err = zipProjectCode()
+						if err != nil {
+							log.Fatalln("🚶‍♀️告辞🚶 备份失败🎒")
+						}
+						isZip = true
+					}
 					_ = os.Remove(goFilePaht)
 				} else {
 					log.Fatalln("🚶‍♀️告辞🚶")
@@ -113,14 +124,34 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 				continue
 			}
 		} else if err == nil && isWeb {
+			//删除之前先把能涉及到的文件备份压缩
+			if !isZip {
+				err = zipProjectCode()
+				if err != nil {
+					infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+					return
+				}
+				isZip = true
+			}
 			_ = os.Remove(goFilePaht)
 		}
 
 		if data.FilePath != "" {
-			err = os.MkdirAll(data.FilePath, os.ModePerm)
+			//创建文件夹
+			exists, err := pkg.PathExists(data.FilePath)
 			if err != nil {
-				infoChan <- pkg.CommandInfo{Message: "🐮🐴正创建目录失败....", Error: err}
+				infoChan <- pkg.CommandInfo{Message: "🐮🐴创建目录失败....", Error: err}
+				return
 			}
+
+			if !exists {
+				err = os.MkdirAll(data.FilePath, os.ModePerm)
+				if err != nil {
+					infoChan <- pkg.CommandInfo{Message: "🐮🐴创建目录失败....", Error: err}
+					return
+				}
+			}
+
 		}
 
 		//log.Println(data.FileName+data.FileExtension, "文件路径:", goFilePaht)
@@ -187,4 +218,30 @@ func addProjectCodePath(tmplPath, filepath, filename string, suffix string) {
 		FileName:      filename,
 		FileExtension: suffix,
 	})
+}
+
+func zipProjectCode() error {
+	var goFilePaht []string
+	for _, data := range projectCodePath {
+		if data.FilePath != "" {
+			goFilePaht = append(goFilePaht, fmt.Sprintf("%s/%s%s", data.FilePath, data.FileName, data.FileExtension))
+		} else {
+			goFilePaht = append(goFilePaht, fmt.Sprintf("%s%s", data.FileName, data.FileExtension))
+		}
+	}
+	zipFileName := fmt.Sprintf(".fuxi/%s/%s.zip", projectName, time.Now().Format("20060102150405"))
+
+	exists, err := pkg.PathExists(path.Dir(zipFileName))
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		err = os.MkdirAll(path.Dir(zipFileName), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	return pkg.FilesToZip(zipFileName, goFilePaht)
 }

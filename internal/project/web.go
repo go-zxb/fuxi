@@ -184,8 +184,10 @@ func newApi(ctx *gin.Context) {
 
 	if !isTrue(empty) {
 		if val := ctx.Query("question"); val == "" {
-			handleinfo(ctx, pkg.CommandInfo{Message: "需求不能为空"})
-			return
+			if !isTrue(localJson) {
+				handleinfo(ctx, pkg.CommandInfo{Message: "需求不能为空"})
+				return
+			}
 		} else {
 			question = val
 		}
