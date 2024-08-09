@@ -351,6 +351,9 @@ func schema() Schema {
 }
 
 func InitialLetter(word string) string {
+	if word == "ID" || word == "UID" {
+		return strings.ToLower(word)
+	}
 	if len(word) > 1 {
 		return strings.ToLower(word[0:1]) + word[1:]
 	}

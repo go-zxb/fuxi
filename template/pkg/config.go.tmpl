@@ -19,7 +19,7 @@ type Config struct {
 	Gin    Gin    `mapstructure:"gin" json:"gin" yaml:"gin"`
 	Jwt    Jwt    `mapstructure:"jwt" json:"jwt" yaml:"jwt"`
 	Redis  Redis  `mapstructure:"redis" json:"redis" yaml:"redis"`
-	DocsServers []DocsServer `yaml:"docs_servers"`
+	DocsServers []DocsServer `mapstructure:"docs_servers" json:"docs_servers" yaml:"docs_servers"`
 	viper    *viper.Viper
 }
 

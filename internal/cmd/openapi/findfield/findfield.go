@@ -111,10 +111,16 @@ func GetStruct(path string, pack ...string) ([]*FiledInfo, string) {
 						for _, field := range structType.Fields.List {
 							if len(field.Names) > 0 && node.Name.Name == strings.TrimSpace(pack[0]) && x.Name.Name == strings.TrimSpace(pack[1]) {
 								modelPath = path
-								f := HandleField(field, node.Name.Name, x.Name.Name)
-								if f != nil {
-									fields = append(fields, f)
+								if field.Names[0].Name != "ID" &&
+									field.Names[0].Name != "CreatedAt" &&
+									field.Names[0].Name != "DeletedAt" &&
+									field.Names[0].Name != "UpdatedAt" {
+									f := HandleField(field, node.Name.Name, x.Name.Name)
+									if f != nil {
+										fields = append(fields, f)
+									}
 								}
+
 							}
 						}
 					}
