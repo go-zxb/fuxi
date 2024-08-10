@@ -1,8 +1,9 @@
 package pkg
 
 import (
-	"golang.org/x/mod/modfile"
 	"os"
+
+	"golang.org/x/mod/modfile"
 )
 
 func GetModuleName(filename string) (string, error) {

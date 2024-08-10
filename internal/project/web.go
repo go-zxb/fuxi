@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	ginstatic "github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/go-zxb/fuxi/middleware"
-	"github.com/go-zxb/fuxi/pkg"
-	"github.com/go-zxb/fuxi/static"
-	"github.com/spf13/cobra"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	ginstatic "github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/go-zxb/fuxi/middleware"
+	"github.com/go-zxb/fuxi/pkg"
+	"github.com/go-zxb/fuxi/static"
+	"github.com/spf13/cobra"
 )
 
 var SSEWebCmd = &cobra.Command{

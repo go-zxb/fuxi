@@ -3,8 +3,9 @@ package findfield
 import (
 	"fmt"
 	"go/ast"
-	"golang.org/x/tools/go/packages"
 	"log"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // GetModelFieldByPackage 根据包路径获取结构体字段

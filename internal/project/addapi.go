@@ -2,16 +2,17 @@ package project
 
 import (
 	"fmt"
-	"github.com/go-zxb/fuxi/internal/ast/add/api"
-	addRepo "github.com/go-zxb/fuxi/internal/ast/add/repo"
-	addService "github.com/go-zxb/fuxi/internal/ast/add/service"
-	"github.com/go-zxb/fuxi/pkg"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/go-zxb/fuxi/internal/ast/add/api"
+	addRepo "github.com/go-zxb/fuxi/internal/ast/add/repo"
+	addService "github.com/go-zxb/fuxi/internal/ast/add/service"
+	"github.com/go-zxb/fuxi/pkg"
+	"github.com/spf13/cobra"
 )
 
 var gushi = `程序优化我心欢😊，

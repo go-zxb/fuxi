@@ -1,8 +1,9 @@
 package addService
 
 import (
-	"github.com/go-zxb/fuxi/internal/ast/add/base"
 	"go/ast"
+
+	"github.com/go-zxb/fuxi/internal/ast/add/base"
 )
 
 func (a *AddService) FuncType() {

@@ -3,9 +3,6 @@ package openapi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-zxb/fuxi/config"
-	"github.com/go-zxb/fuxi/internal/cmd/openapi/findfield"
-	"github.com/spf13/cobra"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -15,6 +12,10 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/go-zxb/fuxi/config"
+	"github.com/go-zxb/fuxi/internal/cmd/openapi/findfield"
+	"github.com/spf13/cobra"
 )
 
 type Tag struct {

@@ -1,9 +1,10 @@
 package base
 
 import (
-	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 	"go/token"
+
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 func BodySimple1(obj, apiFunc string) *ast.BlockStmt {

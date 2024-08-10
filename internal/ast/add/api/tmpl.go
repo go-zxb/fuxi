@@ -1,8 +1,9 @@
 package addapi
 
 import (
-	"github.com/go-zxb/fuxi/pkg"
 	"strings"
+
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 func (a *AddApi) Tmpl() {

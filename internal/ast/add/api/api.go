@@ -3,12 +3,13 @@ package addapi
 import (
 	"errors"
 	"fmt"
-	"github.com/go-zxb/fuxi/internal/ast/base"
-	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"log"
+
+	"github.com/go-zxb/fuxi/internal/ast/base"
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 type AddApi struct {

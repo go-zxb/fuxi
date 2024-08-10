@@ -4,6 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"path"
+	"sort"
+	"strings"
+	"text/template"
+	"time"
+
 	newapi "github.com/go-zxb/fuxi/internal/ast/new"
 	"github.com/go-zxb/fuxi/internal/gpt"
 	"github.com/go-zxb/fuxi/internal/model"
@@ -12,13 +20,6 @@ import (
 	templatex "github.com/go-zxb/fuxi/template"
 	emptytemplatex "github.com/go-zxb/fuxi/template/empty"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
-	"path"
-	"sort"
-	"strings"
-	"text/template"
-	"time"
 )
 
 // PathData 路径数据

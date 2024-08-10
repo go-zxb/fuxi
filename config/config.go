@@ -4,11 +4,12 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-zxb/fuxi/internal/model"
 	"github.com/spf13/viper"
-	"os"
-	"time"
 )
 
 //go:embed config.yaml

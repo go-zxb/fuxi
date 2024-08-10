@@ -1,8 +1,9 @@
 package base
 
 import (
-	"github.com/go-zxb/fuxi/pkg"
 	"text/template"
+
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 // FuncMap 模板函数，处理template模板

@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/go-zxb/fuxi/config"
 	"github.com/go-zxb/fuxi/internal/cmd/openapi"
 	"github.com/go-zxb/fuxi/internal/project"
 	"github.com/go-zxb/fuxi/pkg"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
 )
 
 var rootCmd = &cobra.Command{

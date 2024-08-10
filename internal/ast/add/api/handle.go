@@ -3,11 +3,12 @@ package addapi
 import (
 	"errors"
 	"fmt"
-	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"log"
+
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 // 添加apiHandle

@@ -1,9 +1,10 @@
 package addRepo
 
 import (
+	"go/ast"
+
 	"github.com/go-zxb/fuxi/internal/ast/add/base"
 	"github.com/go-zxb/fuxi/pkg"
-	"go/ast"
 )
 
 func (a *AddRepo) FuncType() {

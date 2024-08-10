@@ -1,8 +1,9 @@
 package base
 
 import (
-	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
+
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 func QueryByObj(isList bool, name, returnType string) *ast.FuncType {

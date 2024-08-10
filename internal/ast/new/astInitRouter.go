@@ -2,13 +2,14 @@ package newapi
 
 import (
 	"fmt"
-	"github.com/go-zxb/fuxi/internal/ast/base"
-	"github.com/go-zxb/fuxi/pkg"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"log"
 	"strings"
+
+	"github.com/go-zxb/fuxi/internal/ast/base"
+	"github.com/go-zxb/fuxi/pkg"
 )
 
 type ASTRouter struct {
