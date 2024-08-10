@@ -14,6 +14,7 @@ import (
 
 	ginstatic "github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/go-zxb/fuxi/internal/cmd/whichFile"
 	"github.com/go-zxb/fuxi/middleware"
 	"github.com/go-zxb/fuxi/pkg"
 	"github.com/go-zxb/fuxi/static"
@@ -74,8 +75,14 @@ func SSEWeb(cmd *cobra.Command, args []string) {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("启动web服务失败: %s\n", err)
+			log.Fatalf("fuxi:启动WebUI服务失败: %s\n", err)
 		}
+	}()
+
+	go func() {
+		// 监控文件变化
+		path, _ := os.Getwd()
+		whichFile.Which(path, []string{}, false)
 	}()
 
 	// 捕获 SIGINT 信号

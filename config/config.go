@@ -37,6 +37,11 @@ func NewConfig(filePath string) (*Config, error) {
 	return Conf.InitConfig(filePath)
 }
 
+func NewConfig2(filePath string) (*Config, error) {
+	conf := &Config{}
+	return conf.InitConfig(filePath)
+}
+
 type System struct {
 	Name        string `mapstructure:"name" json:"name" yaml:"name"`
 	Version     string `mapstructure:"version" json:"version" yaml:"version"`
@@ -107,7 +112,7 @@ func (c *Config) InitConfig(filePath string) (*Config, error) {
 	// 判断配置文件是否存在
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		//用户给的配置文件不存在 则自动使用默认配置文件
+		// 用户给的配置文件不存在 则自动使用默认配置文件
 		// 判断默认配置文件是否存在 不存在则创建一份
 		_, err = os.Stat("config/fuxi_dev.yaml")
 		if os.IsNotExist(err) {

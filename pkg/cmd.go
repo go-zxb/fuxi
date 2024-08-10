@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 )
 
@@ -103,6 +105,56 @@ func RunCommandChannel(ctx context.Context, infoChan chan<- CommandInfo, name st
 	} else {
 		infoChan <- CommandInfo{Message: "命令执行成功", Error: nil}
 	}
+
+	// 等待所有发送操作完成后再关闭通道
+	wg.Wait()
+}
+
+func RunCommandWithCtx(ctx context.Context, name string, args ...string) {
+	command := exec.CommandContext(ctx, name, args...)
+
+	// 创建一个管道用于捕获标准输出和标准错误
+	stdout, err := command.StdoutPipe()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	stderr, err := command.StderrPipe()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// 合并标准输出和标准错误
+	mergedOutput := io.MultiReader(stdout, stderr)
+
+	// 启动命令
+	err = command.Start()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// 使用 WaitGroup 来等待所有发送操作完成
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	// 创建一个 goroutine 来读取标准输出和标准错误并发送给通道
+	go func() {
+		defer wg.Done()
+		scanner := bufio.NewScanner(mergedOutput)
+		for scanner.Scan() {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if len(scanner.Text()) > 0 {
+					log.Println("log: ", strings.Replace(scanner.Text(), "\\", "/", -1))
+				}
+			}
+		}
+	}()
 
 	// 等待所有发送操作完成后再关闭通道
 	wg.Wait()

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"context"
 	"errors"
+	"time"
 	"os"
 	"os/signal"
   "syscall"
@@ -70,7 +71,14 @@ func (d *GinServer) initGinServer()  {
 	engine.Use(middleware.Cors())
 	InitRouter(engine)
 	engine.GET("/openapi/*any", ginSwag.WrapHandler(swagFiles.Handler))
-
+  go func() {
+      time.Sleep(time.Millisecond * 500)
+      addr := fmt.Sprintf("http://%s:%d/openapi/index.html", d.c.Gin.Host, d.c.Gin.Port)
+      if d.c.Gin.Host == "0.0.0.0" {
+        addr = fmt.Sprintf("http://127.0.0.1:%d/openapi/index.html", d.c.Gin.Port)
+      }
+      fmt.Println("💻📒", " openapi api 文档地址：", addr)
+    }()
   // 启动 Gin 服务
   	srv := &http.Server{
   		Addr:    fmt.Sprintf("%s:%d", d.c.Gin.Host, d.c.Gin.Port),
@@ -79,7 +87,8 @@ func (d *GinServer) initGinServer()  {
 
   	go func() {
   		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-  				log.Fatalln("❎ 服务启动失败:", err)
+  				fmt.Println("❎ 服务启动失败:", err)
+  				Exit(1)
   		}
   	}()
 

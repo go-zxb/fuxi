@@ -7,10 +7,19 @@ import (
 
 	"github.com/go-zxb/fuxi/config"
 	"github.com/go-zxb/fuxi/internal/cmd/openapi"
+	"github.com/go-zxb/fuxi/internal/cmd/whichFile"
 	"github.com/go-zxb/fuxi/internal/project"
 	"github.com/go-zxb/fuxi/pkg"
 	"github.com/spf13/cobra"
 )
+
+var (
+	excludePaths []string
+)
+
+func init() {
+	runCmd.PersistentFlags().StringSliceVarP(&excludePaths, "exclude", "e", []string{}, "需要排除监听的go文件目录")
+}
 
 var rootCmd = &cobra.Command{
 	Use:     "fuxi",
@@ -42,14 +51,12 @@ var genCmd = &cobra.Command{
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "运行当前目录下的go项目",
-	Long:  "运行当前目录下的go项目",
+	Short: "运行当前目录下的go项目并监听go文件变化实现自动重新运行",
+	Long:  "运行当前目录下的go项目并监听go文件变化实现自动重新运行",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := pkg.RunCommand("go", "run", "main.go", "server")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Println("✅ run success 👌")
+		// 运行并监控文件变化
+		path, _ := os.Getwd()
+		whichFile.Which(path, excludePaths, false)
 	},
 }
 
@@ -87,7 +94,7 @@ func init() {
 	if err != nil {
 		log.Fatalln("📒 配置文件读取错误", err)
 	}
-	//fmt.Println(v)
+	// fmt.Println(v)
 
 	rootCmd.AddCommand(project.AddApiCmd)
 	rootCmd.AddCommand(project.NewProjectCmd)
