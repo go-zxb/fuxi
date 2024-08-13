@@ -16,8 +16,8 @@ type AddService struct {
 	Name         string
 	FilePath     string
 	Method       string
-	Api          string //接口
-	ApiFunc      string //接口方法
+	Api          string // 接口
+	ApiFunc      string // 接口方法
 	Results      []*ast.Field
 	funcType     *ast.FuncType
 	funcTypeSv   *ast.FuncType
@@ -27,6 +27,7 @@ type AddService struct {
 	NoParams     bool
 	ReturnType   string
 	FuXiAst      base.FuXiAst
+	AddRepo      bool
 }
 
 func (a *AddService) InsertService() error {
@@ -81,38 +82,40 @@ func (a *AddService) InsertService() error {
 		return true
 	})
 
-	//添加repo依赖倒置接口
-	ast.Inspect(node, func(n ast.Node) bool {
-		if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
-			for _, spec := range genDecl.Specs {
-				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-					if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
-						// 检查是否已经存在 CreateUser 方法
-						for _, method := range interfaceType.Methods.List {
-							ident := method.Names[0].Name
-							if ident == pkg.InitialLetter(a.ApiFunc) {
-								fmt.Println(pkg.InitialLetter(a.ApiFunc), "repo interface接口已存在")
-								apiHasInsert = true
-								return false
+	if a.AddRepo {
+		// 添加repo依赖倒置接口
+		ast.Inspect(node, func(n ast.Node) bool {
+			if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+				for _, spec := range genDecl.Specs {
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
+							// 检查是否已经存在 CreateUser 方法
+							for _, method := range interfaceType.Methods.List {
+								ident := method.Names[0].Name
+								if ident == pkg.InitialLetter(a.ApiFunc) {
+									fmt.Println(pkg.InitialLetter(a.ApiFunc), "repo interface接口已存在")
+									apiHasInsert = true
+									return false
+								}
 							}
-						}
 
-						if !apiHasInsert {
-							newMethod := &ast.Field{
-								Names: []*ast.Ident{ast.NewIdent(pkg.InitialLetter(a.ApiFunc))},
-								Type:  a.funcType,
+							if !apiHasInsert {
+								newMethod := &ast.Field{
+									Names: []*ast.Ident{ast.NewIdent(pkg.InitialLetter(a.ApiFunc))},
+									Type:  a.funcType,
+								}
+								interfaceType.Methods.List = append(interfaceType.Methods.List, newMethod)
 							}
-							interfaceType.Methods.List = append(interfaceType.Methods.List, newMethod)
-						}
-						return false
+							return false
 
+						}
 					}
 				}
 			}
-		}
-		return true
-	},
-	)
+			return true
+		},
+		)
+	}
 
 	name, _ := pkg.GetModuleName("go.mod")
 	if !a.FuXiAst.HasImport(node, name+"/internal/model/"+a.Name) {

@@ -113,6 +113,7 @@ type Args struct {
 	ReturnType   string `form:"returnType" json:"returnType,omitempty"`
 	RouterPath   string `form:"routerPath" json:"routerPath,omitempty"`
 	ServicePath  string `form:"servicePath" json:"servicePath,omitempty"`
+	AddRepo      bool   `form:"addRepo" json:"addRepo"`
 }
 
 func getModName(ctx *gin.Context) {
@@ -163,6 +164,8 @@ func addApi(ctx *gin.Context) {
 	name = args.FileName
 	apiFunc = args.ApiFunc
 	method = args.Method
+	AddRepo = args.AddRepo
+	returnType = args.ReturnType
 
 	if args.IsReturnList {
 		isReturnList = "true"
@@ -201,9 +204,6 @@ func addApi(ctx *gin.Context) {
 	}
 	if args.RepoPath != "" {
 		repoPath = args.RepoPath
-	}
-	if args.ReturnType != "" {
-		returnType = args.ReturnType
 	}
 
 	infoChan := make(chan pkg.CommandInfo)

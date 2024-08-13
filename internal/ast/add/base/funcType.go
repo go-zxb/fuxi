@@ -23,6 +23,15 @@ func getReturnType(isList bool, name, returnType string) *ast.FieldList {
 			},
 		}
 	} else {
+		// if returnType == "" {
+		// 	return &ast.FieldList{
+		// 		List: []*ast.Field{
+		// 			{
+		// 				Type: ast.NewIdent("error"),
+		// 			},
+		// 		},
+		// 	}
+		// }
 		return &ast.FieldList{
 			List: []*ast.Field{
 				goReturnType(returnType, name),

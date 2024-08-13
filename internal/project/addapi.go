@@ -33,10 +33,11 @@ var (
 	isReturnList = "false"
 	noParams     = "false"
 	returnType   = ""
+	AddRepo      = true
 )
 
 func Init() {
-	//Print()
+	// Print()
 	name = "great"
 	method = "get"
 	api = ""
@@ -152,7 +153,7 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	} else {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加ApiHandle代码成功", Error: err}
 	}
-	//添加service
+	// 添加service
 	sv := addService.AddService{
 		Name:         name,
 		FilePath:     fmt.Sprintf("%s/%s/%s.go", servicePath, name, name),
@@ -163,6 +164,7 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 		ISByID:       isTrue(iSByID),
 		IsReturnList: isTrue(isReturnList),
 		NoParams:     isTrue(noParams),
+		AddRepo:      AddRepo,
 	}
 	if sv.NoParams {
 		sv.ISByID = false
@@ -196,21 +198,27 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 		repo.ISByID = false
 	}
 
-	err = BeforeCodeToZip(zipFileName, repo.FilePath)
-	if err != nil {
-		infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
-		return
-	}
+	if AddRepo {
+		err = BeforeCodeToZip(zipFileName, repo.FilePath)
+		if err != nil {
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
+			return
+		}
 
-	err = repo.InsertRepo()
-	if err != nil {
-		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加repo代码错误", Error: err}
-		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 似乎啥也没干 就下班了!!!", Error: nil}
+		err = repo.InsertRepo()
+		if err != nil {
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加repo代码错误", Error: err}
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 似乎啥也没干 就下班了!!!", Error: nil}
+		} else {
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加repo代码成功", Error: nil}
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 生成" + apiFunc + "代码添加成功👌！", Error: nil}
+			infoChan <- pkg.CommandInfo{Message: gushi, Error: nil}
+		}
 	} else {
-		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加repo代码成功", Error: nil}
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 生成" + apiFunc + "代码添加成功👌！", Error: nil}
 		infoChan <- pkg.CommandInfo{Message: gushi, Error: nil}
 	}
+
 }
 
 func init() {
