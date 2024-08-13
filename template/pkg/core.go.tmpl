@@ -88,7 +88,7 @@ func (d *GinServer) initGinServer()  {
   	go func() {
   		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
   				fmt.Println("❎ 服务启动失败:", err)
-  				Exit(1)
+  				os.Exit(1)
   		}
   	}()
 

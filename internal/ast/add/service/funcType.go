@@ -19,6 +19,19 @@ func (a *AddService) FuncType() {
 			a.funcTypeSv = base.QueryByID(a.IsReturnList, a.Name, a.ReturnType)
 		} else {
 			if a.NoParams {
+				// if a.ReturnType == "" {
+				// 	a.Body = &ast.BlockStmt{
+				// 		List: []ast.Stmt{
+				// 			&ast.ReturnStmt{
+				// 				Results: []ast.Expr{
+				// 					&ast.Ident{Name: "nil"},
+				// 				},
+				// 			},
+				// 		},
+				// 	}
+				// } else {
+				// 	a.Body = base.BodySimple1("", a.ApiFunc)
+				// }
 				a.Body = base.BodySimple1("", a.ApiFunc)
 				a.funcType = base.QueryNoParams(a.IsReturnList, a.Name, a.ReturnType)
 				a.funcTypeSv = base.QueryNoParams(a.IsReturnList, a.Name, a.ReturnType)

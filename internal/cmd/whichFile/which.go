@@ -74,11 +74,7 @@ func restartApp() {
 			return
 		}
 		// 获取进程pid杀死正在运行的进程
-		pid, err := pkg.PIDByPort(conf.Gin.Port)
-		if err != nil {
-			log.Info(err.Error())
-			return
-		}
+		pid, _ := pkg.PIDByPort(conf.Gin.Port)
 		err = pkg.RunCommand("taskkill", "/PID", fmt.Sprintf("%s", pid), "/F")
 		if err != nil {
 			log.Info(err.Error())
