@@ -100,7 +100,8 @@ func handleArgs(infoChan chan<- pkg.CommandInfo) *model.CodeModel {
 		}
 	} else {
 		if question == "" {
-			log.Fatalln("------❎ 名称或需求不可为空❎--------")
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴 ------❎ 名称或需求不可为空❎--------", Error: nil}
+			return nil
 		}
 	}
 
@@ -109,12 +110,13 @@ func handleArgs(infoChan chan<- pkg.CommandInfo) *model.CodeModel {
 		log.Println("➡️你的需求是: ", question)
 		genCode, jsonStr, err = gpt.GenCode(question)
 		if err != nil {
-			log.Fatalln(err)
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴 ------❎ Ai造数据失败了--------", Error: err}
+			return nil
 		}
 		if filename == "" {
 			filename = strings.ToLower(genCode.StructName)
 		}
-		//导出json数据
+		// 导出json数据
 		if isTrue(isOutputJson) {
 			err = os.MkdirAll("docs/json", 0750)
 			if err != nil {
@@ -158,19 +160,24 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 
 	if !isTrue(empty) {
 		genCode = handleArgs(infoChan)
+		if len(genCode.Fields) == 0 {
+			return
+		}
 	} else {
 		if filename == "" {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗------❎ 名称不可为空❎--------", Error: nil}
 			return
 		}
-		genCode.Table = strings.ToLower(filename)
+		genCode.Table = pkg.CamelToSnake(filename)
 	}
 
-	//对genCode进行单词长短排序😊
+	// 对genCode进行单词长短排序😊
 	sort.Slice(genCode.Fields, func(i, j int) bool {
 		return len(genCode.Fields[i].Name) < len(genCode.Fields[j].Name)
 	})
 
+	// 首字母小写
+	filename = pkg.InitialLetterToLower(filename)
 	addApiCodePath("api.go", apiPath, filename, ".go")
 	addApiCodePath("router.go", routerPath, filename, ".go")
 	addApiCodePath("service.go", servicePath, filename, ".go")
@@ -179,14 +186,14 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 	addApiCodePath("gormGen.go", gormGenPath, filename, ".go")
 	var slicePath = make([]string, 0)
 	var ok = "n"
-	var isOK = false //判断是否有改动文件
-	isZip := false   //是否压缩啦
+	var isOK = false // 判断是否有改动文件
+	isZip := false   // 是否压缩啦
 	for _, data := range apiCodePath {
 		goFilePaht := fmt.Sprintf("%s/%s/%s%s", data.FilePath, data.FileName, data.FileName, data.FileExtension)
-		//文件是否存在
+		// 文件是否存在
 		_, err = os.Stat(goFilePaht)
 		if err == nil && isWebDebug == false {
-			//debug模式先删掉文件
+			// debug模式先删掉文件
 			if isTrue(debug) {
 				if ok == "n" {
 					log.Println(goFilePaht, "🍵 Hi 文件已存在...")
@@ -200,7 +207,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 				}
 
 				if ok == "Y" {
-					//删除之前先把能涉及到的文件备份压缩
+					// 删除之前先把能涉及到的文件备份压缩
 					if !isZip {
 						err = zipModelCode()
 						if err != nil {
@@ -214,11 +221,11 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 					log.Fatalln("🚶‍♀️告辞🚶")
 				}
 			} else {
-				//跳过 继续执行下一个文件
+				// 跳过 继续执行下一个文件
 				continue
 			}
 		} else if err == nil && isWebDebug {
-			//删除之前先把能涉及到的文件备份压缩
+			// 删除之前先把能涉及到的文件备份压缩
 			if !isZip {
 				err = zipModelCode()
 				if err != nil {
@@ -230,7 +237,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 			_ = os.Remove(goFilePaht)
 		}
 
-		//创建文件夹
+		// 创建文件夹
 		exists, err := pkg.PathExists(fmt.Sprintf("%s/%s", data.FilePath, data.FileName))
 		if err != nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️创建所需文件夹失败", Error: err}
@@ -245,13 +252,13 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 			}
 		}
 
-		//log.Println("🫎文件路径:", goFilePaht)
+		// log.Println("🫎文件路径:", goFilePaht)
 		slicePath = append(slicePath, goFilePaht)
-		//生成代码
+		// 生成代码
 		err = TmplExecute(packagename, goFilePaht, data, genCode)
 		if err != nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️生成代码渲染失败", Error: err}
-			//如果失败一个 就删除已生成的文件
+			// 如果失败一个 就删除已生成的文件
 			for _, s := range slicePath {
 				_ = os.Remove(s)
 			}
@@ -265,7 +272,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 	}
 
 	if !isOK {
-		//没有生成任何文件
+		// 没有生成任何文件
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗⚠️❎ 相关代码文件已存在，生成失败！", Error: nil}
 		return
 	}
@@ -274,8 +281,8 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 	InsertGormGenCode(packagename)
 	InsertSetDB(packagename)
 
-	//运行mod tidy
-	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :好的 正在马上执行 go mod tidy...", Error: nil}
+	// 运行mod tidy
+	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :添加成功正在 go mod tidy...", Error: nil}
 	err = pkg.RunCommand("go", "mod", "tidy")
 	if err != nil {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️拉取依赖错误", Error: err}
@@ -283,19 +290,14 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 	}
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :执行 go mod tidy 成功👌", Error: nil}
 
-	//运行gormGen生成gen代码
-	err = pkg.RunCommandNoOutput("go", "run", gormGenPath+"/main.go")
-	if err != nil {
-		infoChan <- pkg.CommandInfo{Message: "🐮🐴❗行gormGenBuild生成gen代码失败", Error: err}
-		return
-	}
+	// 运行gormGen生成gen代码
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	modChan := make(chan pkg.CommandInfo)
 	go pkg.RunCommandChannel(ctx, modChan, "go", "run", gormGenPath+"/main.go")
 	for info := range modChan {
 		if info.Error != nil {
-			infoChan <- pkg.CommandInfo{Message: "❌ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 行gormGenBuild生成gen代码失败 " + info.Message, Error: info.Error}
+			infoChan <- pkg.CommandInfo{Message: "❌ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 行gormGenBuild生成gen代码失败 ,请手动执行" + info.Message, Error: info.Error}
 			cancel()
 			return
 		}
@@ -305,7 +307,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
 		}
 	}
-
+	_ = pkg.RunCommand("fuxi", "openapi")
 	gushi := `代码精妙我自豪😎，
 分享经验乐陶陶😄；
 你我同欢心相照👫，
@@ -315,7 +317,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 
 // TmplExecute 模板渲染
 func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.CodeModel) error {
-	//读取模板
+	// 读取模板
 	var bytes []byte
 	var err error
 	if isTrue(empty) {
@@ -327,7 +329,7 @@ func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.
 		return err
 	}
 
-	//创建tmpl渲染对象
+	// 创建tmpl渲染对象
 	tmpl, err := template.New("demo").Funcs(base.FuncMap).Parse(string(bytes))
 	file, err := os.OpenFile(goFilePath, os.O_CREATE, 0750)
 	if err != nil {
@@ -335,12 +337,12 @@ func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.
 	}
 	defer file.Close()
 
-	//渲染模板
+	// 渲染模板
 	if err = tmpl.Execute(file, model.TmplData{
 		ModuleName:  packageName,
 		Table:       genCode.Table,
-		StructName:  strings.ToLower(filename),
-		GormGenPath: fmt.Sprintf("%s/%s/query", modelPath, strings.ToLower(filename)),
+		StructName:  filename,
+		GormGenPath: fmt.Sprintf("%s/%s/query", modelPath, filename),
 		Data:        genCode.Fields,
 		Import:      handleImport(genCode.Fields),
 		Desc:        genCode.Desc,
@@ -352,13 +354,13 @@ func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.
 
 // InsertInitRouterCode 插入初始化路由代码
 func InsertInitRouterCode(packageName string) {
-	//自动插入初始化路由代码
+	// 自动插入初始化路由代码
 	a := newapi.ASTRouter{
 		Name:     filename,
 		Imports:  []string{fmt.Sprintf("%s/internal/router/%s", packageName, filename)},
 		FilePath: "core/core.go",
 	}
-	//自动插入初始化路由代码
+	// 自动插入初始化路由代码
 	if err := a.InsetCode(); err != nil {
 		log.Println(err)
 	}
@@ -367,13 +369,13 @@ func InsertInitRouterCode(packageName string) {
 
 // InsertGormGenCode 插入gormGen代码
 func InsertGormGenCode(packageName string) {
-	//自动插入初始化路由代码
+	// 自动插入初始化路由代码
 	a := newapi.ASTGormGen{
 		Name:     filename,
 		Imports:  []string{fmt.Sprintf("%s/%s/%s", packageName, gormGenPath, filename)},
 		FilePath: gormGenPath + "/main.go",
 	}
-	//自动插入初始化路由代码
+	// 自动插入初始化路由代码
 	if err := a.InsetCode(); err != nil {
 		fmt.Println(err)
 		return
@@ -381,7 +383,7 @@ func InsertGormGenCode(packageName string) {
 }
 
 func InsertSetDB(packageName string) {
-	//自动插入初始化路由代码
+	// 自动插入初始化路由代码
 	a := newapi.ASTSetDB{
 		Name: filename,
 		Imports: map[string]string{
@@ -389,7 +391,7 @@ func InsertSetDB(packageName string) {
 			"model": fmt.Sprintf("%s/%s/%s", packageName, modelPath, filename)},
 		FilePath: "core/data/mysql.go",
 	}
-	//自动插入初始化路由代码
+	// 自动插入初始化路由代码
 	if err := a.InsetCode(); err != nil {
 		fmt.Println(err)
 		return

@@ -15,10 +15,12 @@ import (
 
 var (
 	excludePaths []string
+	output       string
 )
 
 func init() {
 	runCmd.PersistentFlags().StringSliceVarP(&excludePaths, "exclude", "e", []string{}, "需要排除监听的go文件目录")
+	buildGoCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "输出目录")
 }
 
 var rootCmd = &cobra.Command{
@@ -65,7 +67,7 @@ var buildGoCmd = &cobra.Command{
 	Short: "运行go build -ldflags=\"-s -w\"",
 	Long:  "运行go build -ldflags=\"-s -w\"",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := pkg.RunCommand("go", "build", `-ldflags=-s -w`)
+		err := pkg.RunCommand("go", "build", `-ldflags=-s -w`, `-o`, output)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -89,12 +91,17 @@ var buildFlutterCmd = &cobra.Command{
 func init() {
 	path, _ := os.Getwd()
 	log.Println("💻 当前运行目录:", path)
-	// 读取配置文件
-	_, err := config.NewConfig("")
-	if err != nil {
-		log.Fatalln("📒 配置文件读取错误", err)
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "build:go", "build:flt", "gen", "project":
+		default:
+			// 读取配置文件
+			_, err := config.NewConfig("")
+			if err != nil {
+				log.Fatalln("📒 配置文件读取错误", err)
+			}
+		}
 	}
-	// fmt.Println(v)
 
 	rootCmd.AddCommand(project.AddApiCmd)
 	rootCmd.AddCommand(project.NewProjectCmd)

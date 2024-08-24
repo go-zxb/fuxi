@@ -6,7 +6,6 @@ import (
 	"go/parser"
 	"go/token"
 	"log"
-	"strings"
 
 	"github.com/go-zxb/fuxi/internal/ast/base"
 	"github.com/go-zxb/fuxi/pkg"
@@ -42,7 +41,7 @@ func (a *ASTRouter) InsetCode() error {
 						Fun: &ast.SelectorExpr{
 							X: &ast.CallExpr{
 								Fun: &ast.SelectorExpr{
-									X:   &ast.Ident{Name: strings.ToLower(a.Name)},
+									X:   &ast.Ident{Name: a.Name},
 									Sel: &ast.Ident{Name: fmt.Sprintf("New%sRouter", pkg.InitialLetter(a.Name))},
 								},
 								Args: []ast.Expr{
