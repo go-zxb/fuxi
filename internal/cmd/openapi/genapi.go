@@ -201,6 +201,9 @@ func generateOpenAPIDoc() string {
 
 	for _, route := range routes {
 		path := strings.Trim(route.Path, `"`)
+		if strings.Contains(path, "/:id") {
+			path = strings.ReplaceAll(path, "/:id", "/{id}")
+		}
 		if _, ok := doc.Paths[path]; !ok {
 			doc.Paths[path] = make(map[string]Operation)
 		}
@@ -252,7 +255,7 @@ func generateOpenAPIDoc() string {
 			if strings.Contains(route.Path, "/:id") {
 				operation.Parameters = append(operation.Parameters, Parameter{
 					Name:        "id",
-					In:          "query",
+					In:          "path",
 					Description: fmt.Sprintf("%s ID", structName),
 					Required:    true,
 					Schema: Schema{
@@ -286,7 +289,7 @@ func generateOpenAPIDoc() string {
 			if strings.Contains(route.Path, "/:id") {
 				operation.Parameters = append(operation.Parameters, Parameter{
 					Name:        "id",
-					In:          "query",
+					In:          "path",
 					Description: fmt.Sprintf("%s ID", structName),
 					Required:    true,
 					Schema: Schema{
