@@ -113,7 +113,11 @@ func genDoc() {
 		if strings.Contains(path, "router") {
 			if !info.IsDir() {
 				if strings.HasSuffix(path, ".go") {
-					walkToGetRoute(path)
+					gp := getGroup(path)
+					if gp == "" {
+						gp = "没有分组的Api"
+					}
+					walkToGetRoute(path, gp)
 				}
 			}
 		}
@@ -130,8 +134,34 @@ func genDoc() {
 	log.Println("✅", "接口文档生成成功", "👌")
 }
 
+func getGroup(path string) (group string) {
+	// 解析 Go 文件
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.TypeSpec:
+			if strings.Contains(x.Name.Name, "Router") {
+				_, ok := x.Type.(*ast.StructType)
+				if !ok {
+					return true
+				}
+
+				group = strings.ReplaceAll(x.Name.Name, "Router", "")
+			}
+		}
+
+		return true
+	})
+	return group
+}
+
 // 获取路由信息
-func walkToGetRoute(path string) {
+func walkToGetRoute(path, getGroup string) {
 	// 解析 Go 文件
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
@@ -142,23 +172,19 @@ func walkToGetRoute(path string) {
 		switch x := n.(type) {
 		case *ast.CallExpr:
 			if sel, ok := x.Fun.(*ast.SelectorExpr); ok {
-				if ident, ok := sel.X.(*ast.Ident); ok {
-					if sel.Sel.Name == "GET" || sel.Sel.Name == "POST" || sel.Sel.Name == "PUT" || sel.Sel.Name == "DELETE" {
-						method := sel.Sel.Name
-						path_ := x.Args[0].(*ast.BasicLit).Value
-						handler := ""
-						if val, ok := x.Args[1].(*ast.SelectorExpr); ok {
-							handler = val.Sel.Name
-						} else {
-							handler = x.Args[1].(*ast.Ident).Name
-						}
-						group[ident.Name] = ident.Name
-						routes = append(routes, &Route{Method: method, Path: path_, Handler: handler, Group: ident.Name})
+				if sel.Sel.Name == "GET" || sel.Sel.Name == "POST" || sel.Sel.Name == "PUT" || sel.Sel.Name == "DELETE" {
+					method := sel.Sel.Name
+					path_ := x.Args[0].(*ast.BasicLit).Value
+					handler := ""
+					if val, ok := x.Args[1].(*ast.SelectorExpr); ok {
+						handler = val.Sel.Name
+					} else {
+						handler = x.Args[1].(*ast.Ident).Name
 					}
+					routes = append(routes, &Route{Method: method, Path: path_, Handler: handler, Group: getGroup})
 				}
-
 			}
-		case *ast.CommentGroup:
+		case *ast.TypeSpec:
 
 		default:
 
@@ -263,17 +289,28 @@ func generateOpenAPIDoc() string {
 					},
 				})
 			}
+			for _, info := range findStruct {
+				operation.Parameters = append(operation.Parameters, Parameter{
+					Name:        InitialLetterToLower(info.Name),
+					In:          "query",
+					Description: fmt.Sprintf("%s", info.Comment),
+					Required:    false,
+					Schema: Schema{
+						Type: handleType(info.Type),
+					},
+				})
+			}
 		case "POST", "PUT":
 			var schema Schema
 			pro := map[string]Schema{}
 			strslice := make([]string, 0)
 			for _, info := range findStruct {
-				pro[InitialLetter(info.Name)] = Schema{
+				pro[InitialLetterToLower(info.Name)] = Schema{
 					Type:        info.Type,
 					Example:     "",
 					Description: info.Comment,
 				}
-				strslice = append(strslice, InitialLetter(info.Name))
+				strslice = append(strslice, InitialLetterToLower(info.Name))
 			}
 			schema = Schema{
 				Properties: pro,
@@ -348,7 +385,7 @@ func schema() Schema {
 	}
 }
 
-func InitialLetter(word string) string {
+func InitialLetterToLower(word string) string {
 	if word == "ID" || word == "UID" {
 		return strings.ToLower(word)
 	}
@@ -365,4 +402,14 @@ var OpenapiCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		genDoc()
 	},
+}
+
+func handleType(t string) string {
+	switch t {
+	case "int", "uint", "int64":
+		return "integer"
+	default:
+		return t
+	}
+
 }
