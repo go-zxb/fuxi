@@ -9,7 +9,7 @@ import (
 )
 
 type {{.StructName | initialLetter}} struct {
-  ID        uint `gorm:"primarykey"`
+  ID        uint `json:"id" gorm:"primarykey"`
   UID        string `json:"uid" gorm:"type:varchar(255);column:uid;comment:uid"`
   {{range .Data}}{{.Name | initialLetter}} {{.StructType}} `json:"{{.StructTag}}" gorm:"type:{{.SqlType}};column:{{.SqlTag}};comment:{{.Description}}"`
   {{end}}CreatedAt   time.Time      `json:"createdAt" gorm:"type:datetime;column:created_at;comment:用户创建时间"`

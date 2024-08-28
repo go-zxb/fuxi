@@ -4,6 +4,7 @@ import (
   "errors"
   "gorm.io/gen"
 	"{{.ModuleName}}/core/data"
+	"{{.ModuleName}}/config"
   model "{{.ModuleName}}/internal/model/{{.StructName}}"
 )
 
@@ -19,12 +20,14 @@ type {{.StructName | initialLetter}}RepoInterface interface {
 type {{.StructName | initialLetter}}Service struct {
 	repo {{.StructName | initialLetter}}RepoInterface
 	rdb  *data.Redis
+	conf *config.Config
 }
 
 func New{{.StructName | initialLetter}}Service(repo {{.StructName | initialLetter}}RepoInterface) *{{.StructName | initialLetter}}Service {
 	return &{{.StructName | initialLetter}}Service{
 		repo: repo,
 		rdb: data.GetRedis(),
+		conf: config.GetConfig(),
 	}
 }
 
