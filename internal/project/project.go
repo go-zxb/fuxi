@@ -66,6 +66,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	addProjectCodePath("dockerfile", "", "dockerfile", "")
 	addProjectCodePath(".gitignore", "", ".gitignore", "")
 	addProjectCodePath("aes.go", "pkg/encrypt", "aes", ".go")
+	addProjectCodePath("md5.go", "pkg/encrypt", "md5", ".go")
 	addProjectCodePath("config.go", "config", "config", ".go")
 	addProjectCodePath("mysql.go", "core/data", "mysql", ".go")
 	addProjectCodePath("config.yaml", "config", "config", ".yaml")
@@ -78,6 +79,9 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	addProjectCodePath("redis.go", "core/data", "redis", ".go")
 	addProjectCodePath("cors.go", "middleware", "cors", ".go")
 	addProjectCodePath("docs.go", "docs/openapi", "docs", ".go")
+	addProjectCodePath("consts.go", "utils", "consts", ".go")
+	addProjectCodePath("jwt.go", "pkg/jwt", "jwt", ".go")
+	addProjectCodePath("middlewareJwt.go", "middleware", "jwt", ".go")
 
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"
@@ -92,10 +96,10 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 			goFilePaht = fmt.Sprintf("%s%s", data.FileName, data.FileExtension)
 		}
 
-		//文件是否存在
+		// 文件是否存在
 		_, err := os.Stat(goFilePaht)
 		if err == nil && isWebDebug == false {
-			//debug模式先删掉文件
+			// debug模式先删掉文件
 			if isTrue(debug) {
 				if ok == "n" {
 					log.Println(goFilePaht, "🍵 Hi 文件已存在...")
@@ -109,7 +113,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 				}
 
 				if ok == "Y" {
-					//删除之前先把能涉及到的文件备份压缩
+					// 删除之前先把能涉及到的文件备份压缩
 					if !isZip {
 						err = zipProjectCode()
 						if err != nil {
@@ -125,7 +129,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 				continue
 			}
 		} else if err == nil && isWebDebug {
-			//删除之前先把能涉及到的文件备份压缩
+			// 删除之前先把能涉及到的文件备份压缩
 			if !isZip {
 				err = zipProjectCode()
 				if err != nil {
@@ -138,7 +142,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 		}
 
 		if data.FilePath != "" {
-			//创建文件夹
+			// 创建文件夹
 			exists, err := pkg.PathExists(data.FilePath)
 			if err != nil {
 				infoChan <- pkg.CommandInfo{Message: "🐮🐴创建目录失败....", Error: err}
@@ -155,7 +159,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 
 		}
 
-		//log.Println(data.FileName+data.FileExtension, "文件路径:", goFilePaht)
+		// log.Println(data.FileName+data.FileExtension, "文件路径:", goFilePaht)
 		bytes, err := tmpl.GoCode.ReadFile(data.TmplPath + ".tmpl")
 		if err != nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴读取模板代码失败....", Error: err}

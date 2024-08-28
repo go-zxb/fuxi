@@ -1,0 +1,54 @@
+package middleware
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"{{.ModuleName}}/config"
+	"{{.ModuleName}}/core/data"
+	"{{.ModuleName}}/pkg/encrypt"
+	 "{{.ModuleName}}/pkg/jwt"
+	"{{.ModuleName}}/pkg/response"
+	"{{.ModuleName}}/utils"
+	"github.com/gin-gonic/gin"
+)
+
+func JwtAuth() gin.HandlerFunc {
+	rdb := data.GetRedis()
+	conf := config.GetConfig()
+	return func(ctx *gin.Context) {
+		reply := response.Response{}
+		j := jwt.Jwt{}
+		tokenString := ctx.GetHeader("Token")
+		tokenClaims, err := j.ParseToken(tokenString, conf.Jwt.SecretKey)
+		if err != nil {
+			reply.WithCode(http.StatusUnauthorized).WithMessage(err.Error()).Fail(ctx)
+			ctx.Abort()
+			return
+		}
+
+		black, _ := rdb.GetInt(fmt.Sprintf("%s%s", utils.TokenBlack, encrypt.MD5(tokenString)))
+		switch black {
+		case 120:
+			reply.WithCode(http.StatusUnauthorized).WithMessage("账号进入黑名单列表,无法在继续为您服务").Fail(ctx)
+			ctx.Abort()
+			return
+		case 110:
+			reply.WithCode(http.StatusUnauthorized).WithMessage("登录异常,请重新登录").Fail(ctx)
+			ctx.Abort()
+			return
+		case 100:
+			reply.WithCode(http.StatusUnauthorized).WithMessage("无效请求 账号已退出登录").Fail(ctx)
+			ctx.Abort()
+			return
+		}
+
+		expired := int64(tokenClaims.ExpiresAt.Time.Sub(time.Now()).Seconds())
+		ctx.Set("exp", expired)
+		ctx.Set("uid", tokenClaims.Uid)
+		ctx.Set("role", tokenClaims.Role)
+		ctx.Set("token", encrypt.MD5(tokenString))
+		ctx.Next()
+	}
+}
