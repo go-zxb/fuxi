@@ -23,8 +23,8 @@ import (
 
 var SSEWebCmd = &cobra.Command{
 	Use:   "ui",
-	Short: "ui",
-	Long:  "ui",
+	Short: "启动一个web服务 可在网页端创建项目",
+	Long:  "启动一个web服务 可在网页端创建项目",
 	Run:   SSEWeb,
 }
 

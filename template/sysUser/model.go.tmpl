@@ -1,0 +1,41 @@
+package model
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type SysUser struct {
+	ID        uint           `json:"id" gorm:"primarykey"`
+	UID       string         `json:"uid" gorm:"type:varchar(255);column:uid;comment:uid"`
+	UserName  string         `json:"userName" gorm:"type:varchar(255);column:user_name;comment:用户名"`
+	Password  string         `json:"password" gorm:"type:varchar(255);column:password;comment:用户密码"`
+	Nickname  string         `json:"nickname" gorm:"type:varchar(255);column:nickname;comment:用户昵称"`
+	Email     string         `json:"email" gorm:"type:varchar(255);column:email;comment:用户邮箱"`
+	Role      string         `json:"role" gorm:"type:varchar(255);column:role;comment:用户角色"`
+	Status    uint           `json:"status" gorm:"type:tinyint;column:status;comment:用户状态"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"type:datetime;column:created_at;comment:应用创建时间"`
+	UpdatedAt time.Time      `json:"updatedAt" gorm:"type:datetime;column:updated_at;comment:应用信息更新时间"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (SysUser) TableName() string {
+	return "sys_users"
+}
+
+type Login struct {
+	UserName string `json:"userName"`
+	Password string `json:"password"`
+}
+
+type SysUserQuery struct {
+	UserName  string `form:"userName" json:"userName"`
+	Email     string `form:"email" json:"email"`
+	Nickname  string `form:"nickname" json:"nickname"`
+	UID       string `form:"uid" json:"uid"`
+	Page      int    `form:"page" json:"page"`
+	Total     int    `form:"total" json:"total"`
+	PageSize  int    `form:"pageSize" json:"pageSize"`
+	CreatedAt int64  `form:"createdAt" json:"createdAt"`
+}

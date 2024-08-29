@@ -1,0 +1,73 @@
+package service
+
+import (
+	"errors"
+
+	"{{.ModuleName}}/config"
+	"{{.ModuleName}}/core/data"
+	"{{.ModuleName}}/internal/model/sysUser"
+	"{{.ModuleName}}/pkg/encrypt"
+	 "{{.ModuleName}}/pkg/jwt"
+	"gorm.io/gorm"
+)
+
+// SysUserRepoInterface repo依赖倒置接口
+type SysUserRepoInterface interface {
+	GetUserInfo(sysUser *model.SysUserQuery) (*model.SysUser, error)
+	Login(sysUser *model.Login) (*model.SysUser, error)
+	Register(sysUser *model.SysUser) error
+}
+
+type SysUserService struct {
+	repo SysUserRepoInterface
+	rdb  *data.Redis
+	conf *config.Config
+}
+
+func NewSysUserService(repo SysUserRepoInterface) *SysUserService {
+	return &SysUserService{
+		repo: repo,
+		rdb:  data.GetRedis(),
+		conf: config.GetConfig(),
+	}
+}
+
+func (s *SysUserService) GetUserInfo(sysUser *model.SysUserQuery) (*model.SysUser, error) {
+	return s.repo.GetUserInfo(sysUser)
+}
+
+func (s *SysUserService) Login(sysUser *model.Login) (string, error) {
+	login, err := s.repo.Login(sysUser)
+	if err != nil {
+		return "", err
+	}
+
+	if !encrypt.ComparePasswords(login.Password, sysUser.Password) {
+		return "", errors.New("账号或密码不正确")
+	}
+
+	if login.Status == 2 {
+		return "", errors.New("账号已被冻结,无法正常登录")
+	}
+
+	j := jwt.Jwt{}
+	token, err := j.GenerateToken(login.UID, login.Role, s.conf.Jwt.SecretKey, s.conf.Jwt.ExpirationSeconds)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *SysUserService) Register(sysUser *model.SysUser) error {
+	userInfo, err := s.repo.GetUserInfo(&model.SysUserQuery{UserName: sysUser.UserName})
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		sysUser.Password = encrypt.EncryptPassword(sysUser.Password)
+		return s.repo.Register(sysUser)
+	}
+
+	if userInfo.ID > 0 {
+		return errors.New("账号已存在")
+	}
+
+	return errors.New("未知错误")
+}

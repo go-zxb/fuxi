@@ -277,9 +277,9 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 		return
 	}
 
-	InsertInitRouterCode(packagename)
-	InsertGormGenCode(packagename)
-	InsertSetDB(packagename)
+	InsertInitRouterCode(packagename, filename)
+	InsertGormGenCode(packagename, filename)
+	InsertSetDB(packagename, filename)
 
 	// 运行mod tidy
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :添加成功正在 go mod tidy...", Error: nil}
@@ -353,11 +353,11 @@ func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.
 }
 
 // InsertInitRouterCode 插入初始化路由代码
-func InsertInitRouterCode(packageName string) {
+func InsertInitRouterCode(moduleName, filename string) {
 	// 自动插入初始化路由代码
 	a := newapi.ASTRouter{
 		Name:     filename,
-		Imports:  []string{fmt.Sprintf("%s/internal/router/%s", packageName, filename)},
+		Imports:  []string{fmt.Sprintf("%s/internal/router/%s", moduleName, filename)},
 		FilePath: "core/core.go",
 	}
 	// 自动插入初始化路由代码
@@ -368,11 +368,11 @@ func InsertInitRouterCode(packageName string) {
 }
 
 // InsertGormGenCode 插入gormGen代码
-func InsertGormGenCode(packageName string) {
+func InsertGormGenCode(moduleName, filename string) {
 	// 自动插入初始化路由代码
 	a := newapi.ASTGormGen{
 		Name:     filename,
-		Imports:  []string{fmt.Sprintf("%s/%s/%s", packageName, gormGenPath, filename)},
+		Imports:  []string{fmt.Sprintf("%s/%s/%s", moduleName, gormGenPath, filename)},
 		FilePath: gormGenPath + "/main.go",
 	}
 	// 自动插入初始化路由代码
@@ -382,13 +382,13 @@ func InsertGormGenCode(packageName string) {
 	}
 }
 
-func InsertSetDB(packageName string) {
+func InsertSetDB(moduleName, filename string) {
 	// 自动插入初始化路由代码
 	a := newapi.ASTSetDB{
 		Name: filename,
 		Imports: map[string]string{
-			"query": fmt.Sprintf("%s/%s/%s/query", packageName, modelPath, filename),
-			"model": fmt.Sprintf("%s/%s/%s", packageName, modelPath, filename)},
+			"query": fmt.Sprintf("%s/%s/%s/query", moduleName, modelPath, filename),
+			"model": fmt.Sprintf("%s/%s/%s", moduleName, modelPath, filename)},
 		FilePath: "core/data/mysql.go",
 	}
 	// 自动插入初始化路由代码

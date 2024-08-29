@@ -6,50 +6,36 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"text/template"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-zxb/fuxi/pkg"
-	tmpl "github.com/go-zxb/fuxi/template/pkg"
+	tmpl "github.com/go-zxb/fuxi/template/sysUser"
 	"github.com/spf13/cobra"
 )
 
-var (
-	projectName = ""
-	moduleName  = ""
-	debug       = ""
-	isWebDebug  = false
-)
-
-type Project struct {
-	ProjectName string
-	PackageName string
-	Description string
-	ModuleName  string
-	Version     string
+type SysUser struct {
+	ModuleName string
 }
 
 func init() {
-	NewProjectCmd.Flags().StringVarP(&projectName, "name", "n", "great", "项目名 如:fuxi")
-	NewProjectCmd.Flags().StringVarP(&debug, "debug", "d", "false", "是否开启debug模式")
+	NewSysUserCmd.Flags().StringVarP(&debug, "debug", "d", "false", "是否开启debug模式")
 }
 
-var NewProjectCmd = &cobra.Command{
-	Use:   "project",
-	Short: "创建一个go项目工程",
-	Long:  "创建一个go项目工程",
-	Run:   cmdHandle,
+var NewSysUserCmd = &cobra.Command{
+	Use:   "create:sysUser",
+	Short: "自动创建一个用户注册登录模块",
+	Long:  "自动创建一个用户注册登录模块",
+	Run:   cmdHandleSysUser,
 }
 
-var projectCodePath []*PathData
+var sysUserCodePath []*PathData
 
-func cmdHandle(cmd *cobra.Command, args []string) {
-	if pkg.HasChinese(projectName) {
-		log.Fatalln("------名称不能包含中文--------")
-	}
+func cmdHandleSysUser(cmd *cobra.Command, args []string) {
+
 	infoChan := make(chan pkg.CommandInfo)
-	go handleGenProjectCode(infoChan)
+	go handleGenSysUserCode(infoChan)
 	for info := range infoChan {
 		if info.Error != nil {
 			log.Fatalln("❌", info.Message, info.Error.Error())
@@ -59,44 +45,22 @@ func cmdHandle(cmd *cobra.Command, args []string) {
 	}
 }
 
-func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
+func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 	defer close(infoChan) // 确保在函数返回时关闭通道
-	addProjectCodePath("mod", "", "go", ".mod")
-	addProjectCodePath("main.go", "", "main", ".go")
-	addProjectCodePath("core.go", "core", "core", ".go")
-	addProjectCodePath("dockerfile", "", "dockerfile", "")
-	addProjectCodePath(".gitignore", "", ".gitignore", "")
-	addProjectCodePath("aes.go", "pkg/encrypt", "aes", ".go")
-	addProjectCodePath("md5.go", "pkg/encrypt", "md5", ".go")
-	addProjectCodePath("pwd.go", "pkg/encrypt", "pwd", ".go")
-	addProjectCodePath("config.go", "config", "config", ".go")
-	addProjectCodePath("mysql.go", "core/data", "mysql", ".go")
-	addProjectCodePath("config.yaml", "config", "config", ".yaml")
-	addProjectCodePath("strconv.go", "pkg/strconv", "strconv", ".go")
-	addProjectCodePath("main.gorm.go", "cmd/gorm/gen", "main", ".go")
-	addProjectCodePath("httpRequest.go", "pkg/httputil", "request", ".go")
-	addProjectCodePath("response.go", "pkg/response", "response", ".go")
-	addProjectCodePath("json_arm.go", "pkg/json", "json_arm", ".go")
-	addProjectCodePath("json_default.go", "pkg/json", "json_default", ".go")
-	addProjectCodePath("redis.go", "core/data", "redis", ".go")
-	addProjectCodePath("cors.go", "middleware", "cors", ".go")
-	addProjectCodePath("docs.go", "docs/openapi", "docs", ".go")
-	addProjectCodePath("consts.go", "utils", "consts", ".go")
-	addProjectCodePath("jwt.go", "pkg/jwt", "jwt", ".go")
-	addProjectCodePath("middlewareJwt.go", "middleware", "jwt", ".go")
+	addSysUserCodePath("api.go", "internal/api/sysUser", "sysUser", ".go")
+	addSysUserCodePath("repo.go", "internal/repo/sysUser", "sysUser", ".go")
+	addSysUserCodePath("service.go", "internal/service/sysUser", "sysUser", ".go")
+	addSysUserCodePath("router.go", "internal/router/sysUser", "sysUser", ".go")
+	addSysUserCodePath("model.go", "internal/model/sysUser", "sysUser", ".go")
+	addSysUserCodePath("gen.go", "cmd/gorm/gen/sysUser", "sysUser", ".go")
 
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"
 	isOk := false
 	isZip := false
-	for _, data := range projectCodePath {
+	for _, data := range sysUserCodePath {
 
-		goFilePaht := ""
-		if data.FilePath != "" {
-			goFilePaht = fmt.Sprintf("%s/%s%s", data.FilePath, data.FileName, data.FileExtension)
-		} else {
-			goFilePaht = fmt.Sprintf("%s%s", data.FileName, data.FileExtension)
-		}
+		goFilePaht := fmt.Sprintf("%s/%s%s", data.FilePath, data.FileName, data.FileExtension)
 
 		// 文件是否存在
 		_, err := os.Stat(goFilePaht)
@@ -117,9 +81,9 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 				if ok == "Y" {
 					// 删除之前先把能涉及到的文件备份压缩
 					if !isZip {
-						err = zipProjectCode()
+						err = zipSysUserCode()
 						if err != nil {
-							log.Fatalln("🚶‍♀️告辞🚶 备份失败🎒")
+							log.Fatalln("🚶‍♀️告辞🚶 备份失败🎒", err)
 						}
 						isZip = true
 					}
@@ -133,7 +97,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 		} else if err == nil && isWebDebug {
 			// 删除之前先把能涉及到的文件备份压缩
 			if !isZip {
-				err = zipProjectCode()
+				err = zipSysUserCode()
 				if err != nil {
 					infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
 					return
@@ -161,8 +125,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 
 		}
 
-		// log.Println(data.FileName+data.FileExtension, "文件路径:", goFilePaht)
-		bytes, err := tmpl.GoCode.ReadFile(data.TmplPath + ".tmpl")
+		bytes, err := tmpl.TmplSysUserData.ReadFile(data.TmplPath + ".tmpl")
 		if err != nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴读取模板代码失败....", Error: err}
 		}
@@ -172,12 +135,14 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴创建源码文件失败....", Error: err}
 		}
 		defer file.Close()
-		if err = tmplx.Execute(file, Project{
-			ProjectName: projectName,
-			PackageName: projectName,
-			ModuleName:  projectName,
-			Version:     gin.Version,
-			Description: "代码生成工具",
+
+		moduleName, err = pkg.GetModuleName("go.mod")
+		if err != nil {
+			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️请先初始化项目: fuxi project -n 项目名称", Error: err}
+			return
+		}
+		if err = tmplx.Execute(file, SysUser{
+			ModuleName: moduleName,
 		}); err != nil {
 			infoChan <- pkg.CommandInfo{Message: "⚠️❎🐮🐴代码渲染失败....", Error: err}
 		}
@@ -189,8 +154,13 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	}
 
 	if !isOk {
-		infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅  项目还是哪个项目, 未做任何改变 😊 ~略略略略~"), Error: nil}
+		infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅  模块还是哪个模块, 未做任何改变 😊 ~略略略略~"), Error: nil}
+		return
 	}
+
+	InsertInitRouterCode(moduleName, "sysUser")
+	InsertGormGenCode(moduleName, "sysUser")
+	InsertSetDB(moduleName, "sysUser")
 
 	infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在拉取依赖包...", Error: nil}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -209,17 +179,13 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
 		}
 	}
-
-	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 项目成功", projectName), Error: nil}
-	si := `程序流畅心自喜😊,
-助人为乐情更怡🤗;
-共享成功欢声起🎊,
-同心协力福缘齐🤝.`
-	infoChan <- pkg.CommandInfo{Message: si, Error: nil}
+	_ = pkg.RunCommandNoOutput("fuxi", "gen")
+	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
+	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 系统用户模块成功", filepath.Base(moduleName)), Error: nil}
 }
 
-func addProjectCodePath(tmplPath, filepath, filename string, suffix string) {
-	projectCodePath = append(projectCodePath, &PathData{
+func addSysUserCodePath(tmplPath, filepath, filename string, suffix string) {
+	sysUserCodePath = append(sysUserCodePath, &PathData{
 		TmplPath:      tmplPath,
 		FilePath:      filepath,
 		FileName:      filename,
@@ -227,9 +193,9 @@ func addProjectCodePath(tmplPath, filepath, filename string, suffix string) {
 	})
 }
 
-func zipProjectCode() error {
+func zipSysUserCode() error {
 	var goFilePaht []string
-	for _, data := range projectCodePath {
+	for _, data := range sysUserCodePath {
 		if data.FilePath != "" {
 			goFilePaht = append(goFilePaht, fmt.Sprintf("%s/%s%s", data.FilePath, data.FileName, data.FileExtension))
 		} else {

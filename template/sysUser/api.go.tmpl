@@ -1,0 +1,68 @@
+package api
+
+import (
+	"github.com/gin-gonic/gin"
+	"{{.ModuleName}}/internal/model/sysUser"
+	service "{{.ModuleName}}/internal/service/sysUser"
+	"{{.ModuleName}}/pkg/response"
+)
+
+type SysUserApi struct {
+	reply response.IResponse
+	sv    *service.SysUserService
+}
+
+func NewSysUserApi(sv *service.SysUserService) *SysUserApi {
+	return &SysUserApi{reply: response.New(), sv: sv}
+}
+
+// GetUserInfo
+// @model model.SysUserQuery
+// @auth true
+func (a *SysUserApi) GetUserInfo(ctx *gin.Context) {
+	var oo model.SysUserQuery
+	err := ctx.ShouldBindQuery(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+
+	list, err := a.sv.GetUserInfo(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+}
+
+// Login
+// @model model.Login
+func (a *SysUserApi) Login(ctx *gin.Context) {
+	var oo model.Login
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	token, err := a.sv.Login(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.WithMessage("登录成功·欢迎回来").WithData(gin.H{"token": token}).Success(ctx)
+}
+
+// Register
+// @model model.Login
+func (a *SysUserApi) Register(ctx *gin.Context) {
+	var oo model.SysUser
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err := a.sv.Register(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+}
