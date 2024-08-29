@@ -1,0 +1,75 @@
+package service
+
+import (
+	"errors"
+
+	"{{.ModuleName}}/config"
+	"{{.ModuleName}}/core/data"
+	"{{.ModuleName}}/internal/model/{{.FilePath}}"
+	"{{.ModuleName}}/pkg/encrypt"
+	 "{{.ModuleName}}/pkg/jwt"
+	"gorm.io/gorm"
+)
+
+// {{.StructName}}RepoInterface repo依赖倒置接口
+type {{.StructName}}RepoInterface interface {
+  Get{{.StructName}}Info(username string) (*model.{{.StructName}}, error)
+	GetSelfInfo(uid string) (*model.{{.StructName}}, error)
+	Login(u *model.Login) (*model.{{.StructName}}, error)
+	Register(u *model.{{.StructName}}) error
+}
+
+type {{.StructName}}Service struct {
+	repo {{.StructName}}RepoInterface
+	rdb  *data.Redis
+	conf *config.Config
+}
+
+func New{{.StructName}}Service(repo {{.StructName}}RepoInterface) *{{.StructName}}Service {
+	return &{{.StructName}}Service{
+		repo: repo,
+		rdb:  data.GetRedis(),
+		conf: config.GetConfig(),
+	}
+}
+
+
+func (s *{{.StructName}}Service) Login(u *model.Login) (string, error) {
+	login, err := s.repo.Login(u)
+	if err != nil {
+		return "", err
+	}
+
+	if !encrypt.ComparePasswords(login.Password, u.Password) {
+		return "", errors.New("账号或密码不正确")
+	}
+
+	if login.Status == 2 {
+		return "", errors.New("账号已被冻结,无法正常登录")
+	}
+
+	j := jwt.Jwt{}
+	token, err := j.GenerateToken(login.UID, login.Role, s.conf.Jwt.SecretKey, s.conf.Jwt.ExpirationSeconds)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *{{.StructName}}Service) Register(u *model.{{.StructName}}) error {
+	userInfo, err := s.repo.Get{{.StructName}}Info(u.UserName)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		u.Password = encrypt.EncryptPassword(u.Password)
+		return s.repo.Register(u)
+	}
+
+	if userInfo.ID > 0 {
+		return errors.New("账号已存在")
+	}
+
+	return errors.New("未知错误")
+}
+
+func (s *{{.StructName}}Service) GetSelfInfo(uid string) (*model.{{.StructName}}, error) {
+	return s.repo.GetSelfInfo(uid)
+}

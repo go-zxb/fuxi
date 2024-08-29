@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type SysUser struct {
+type {{.StructName}} struct {
 	ID        uint           `json:"id" gorm:"primarykey"`
 	UID       string         `json:"uid" gorm:"type:varchar(255);column:uid;comment:uid"`
 	UserName  string         `json:"userName" gorm:"type:varchar(255);column:user_name;comment:用户名"`
@@ -20,7 +20,7 @@ type SysUser struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
-func (SysUser) TableName() string {
+func ({{.StructName}}) TableName() string {
 	return "sys_users"
 }
 
@@ -29,7 +29,7 @@ type Login struct {
 	Password string `json:"password"`
 }
 
-type SysUserQuery struct {
+type {{.StructName}}Query struct {
 	UserName  string `form:"userName" json:"userName"`
 	Email     string `form:"email" json:"email"`
 	Nickname  string `form:"nickname" json:"nickname"`

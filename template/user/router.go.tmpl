@@ -1,0 +1,40 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+	api "{{.ModuleName}}/internal/api/{{.FilePath}}"
+	repo "{{.ModuleName}}/internal/repo/{{.FilePath}}"
+	service "{{.ModuleName}}/internal/service/{{.FilePath}}"
+	"{{.ModuleName}}/middleware"
+)
+
+type {{.StructName}}ApiInterface interface {
+	GetSelfInfo(ctx *gin.Context)
+	Login(ctx *gin.Context)
+	Register(ctx *gin.Context)
+}
+
+type {{.StructName}}Router struct {
+	engine *gin.Engine
+	api    {{.StructName}}ApiInterface
+}
+
+func New{{.StructName}}Router(engine *gin.Engine) *{{.StructName}}Router {
+	return &{{.StructName}}Router{
+		engine: engine,
+		api:    api.New{{.StructName}}Api(service.New{{.StructName}}Service(repo.New{{.StructName}}Repo())),
+	}
+}
+
+// Init{{.StructName}}Router 初始化{{.StructName}}路由
+func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
+	{
+		// v1
+		groupV1 := r.engine.Group("api/v1/{{.FileName}}")
+		authAPi := r.engine.Group("api/v1/{{.FileName}}").Use(middleware.JwtAuth())
+		authAPi.GET("/getSelfInfo", r.api.GetSelfInfo)
+		groupV1.POST("/login", r.api.Login)
+		groupV1.POST("/register", r.api.Register)
+
+	}
+}

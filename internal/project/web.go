@@ -269,7 +269,7 @@ func newApi(ctx *gin.Context) {
 	// 从通道接收命令执行信息
 	for info := range infoChan {
 		handleinfo(ctx, info)
-		time.Sleep(time.Millisecond * 300)
+		time.Sleep(time.Millisecond * 100)
 	}
 	ctx.Writer.Write([]byte("data: ok\n\n"))
 
@@ -324,7 +324,7 @@ func createProject(ctx *gin.Context) {
 	// 从通道接收命令执行信息
 	for info := range infoChan {
 		handleinfo(ctx, info)
-		time.Sleep(time.Millisecond * 300)
+		time.Sleep(time.Millisecond * 100)
 	}
 	ctx.Writer.Write([]byte("data: ok\n\n"))
 	Init()

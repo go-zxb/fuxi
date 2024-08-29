@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"io"
 	"os"
+	"strings"
 )
 
 // FilesToZip 将文件添加到已有的ZIP文件中，如果ZIP文件不存在则创建新的ZIP文件。
@@ -30,7 +31,7 @@ func FilesToZip(zipFileName string, files []string) error {
 	zipWriter := zip.NewWriter(newZipFile)
 	defer zipWriter.Close()
 
-	//如果ZIP文件存在，先复制现有的文件到新的ZIP文件中
+	// 如果ZIP文件存在，先复制现有的文件到新的ZIP文件中
 	if zipFileExists {
 		// 打开现有的ZIP文件进行读取
 		existingZipFile, err := zip.OpenReader(zipFileName)
@@ -50,6 +51,9 @@ func FilesToZip(zipFileName string, files []string) error {
 	// 添加新的文件到ZIP文件中
 	for _, file := range files {
 		if err := addFileToZip(zipWriter, file); err != nil {
+			if strings.Contains(err.Error(), "The system cannot find the path specified") {
+				continue
+			}
 			return err
 		}
 	}

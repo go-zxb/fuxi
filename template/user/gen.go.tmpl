@@ -1,0 +1,19 @@
+package gen
+
+import (
+	 "{{.ModuleName}}/internal/model/{{.FilePath}}"
+	"gorm.io/gen"
+)
+
+// Gen{{.StructName}}Build 生成sysUser数据CRUD依赖文件
+func Gen{{.StructName}}Build() {
+	g := gen.NewGenerator(gen.Config{
+		OutPath: "internal/model/{{.GenFilePath}}/query",
+		Mode:    gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+
+	g.ApplyBasic(
+		model.{{.StructName}}{},
+	)
+	g.Execute()
+}

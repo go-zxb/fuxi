@@ -11,20 +11,38 @@ import (
 	"time"
 
 	"github.com/go-zxb/fuxi/pkg"
-	tmpl "github.com/go-zxb/fuxi/template/sysUser"
+	tmpl "github.com/go-zxb/fuxi/template/user"
 	"github.com/spf13/cobra"
 )
 
 type SysUser struct {
-	ModuleName string
+	ModuleName  string
+	StructName  string
+	isSysUser   string
+	FilePath    string
+	FileName    string
+	GenFilePath string
+	debug       string
+}
+
+var sysUser = &SysUser{
+	ModuleName:  "",
+	StructName:  "User",
+	FileName:    "user",
+	FilePath:    "user",
+	GenFilePath: "user",
 }
 
 func init() {
-	NewSysUserCmd.Flags().StringVarP(&debug, "debug", "d", "false", "是否开启debug模式")
+	NewSysUserCmd.Flags().StringVarP(&sysUser.debug, "debug", "d", "false", "是否开启debug模式")
+	NewSysUserCmd.Flags().StringVarP(&sysUser.StructName, "struct", "s", sysUser.StructName, "结构体名称")
+	NewSysUserCmd.Flags().StringVarP(&sysUser.isSysUser, "isSysUser", "i", sysUser.isSysUser, "是否是系统用户模块")
+	NewSysUserCmd.Flags().StringVarP(&sysUser.FileName, "filename", "f", sysUser.FileName, "文件名称")
+
 }
 
 var NewSysUserCmd = &cobra.Command{
-	Use:   "create:sysUser",
+	Use:   "create:user",
 	Short: "自动创建一个用户注册登录模块",
 	Long:  "自动创建一个用户注册登录模块",
 	Run:   cmdHandleSysUser,
@@ -47,12 +65,22 @@ func cmdHandleSysUser(cmd *cobra.Command, args []string) {
 
 func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 	defer close(infoChan) // 确保在函数返回时关闭通道
-	addSysUserCodePath("api.go", "internal/api/sysUser", "sysUser", ".go")
-	addSysUserCodePath("repo.go", "internal/repo/sysUser", "sysUser", ".go")
-	addSysUserCodePath("service.go", "internal/service/sysUser", "sysUser", ".go")
-	addSysUserCodePath("router.go", "internal/router/sysUser", "sysUser", ".go")
-	addSysUserCodePath("model.go", "internal/model/sysUser", "sysUser", ".go")
-	addSysUserCodePath("gen.go", "cmd/gorm/gen/sysUser", "sysUser", ".go")
+	if sysUser.isSysUser == "true" {
+		sysUser.FilePath = "system/sysUser"
+		sysUser.GenFilePath = "system/sysUser"
+		sysUser.StructName = "SysUser"
+		sysUser.FileName = "sysUser"
+	} else {
+		sysUser.FilePath = sysUser.FileName
+		sysUser.GenFilePath = sysUser.FileName
+	}
+
+	addSysUserCodePath("api.go", "internal/api/"+sysUser.FilePath, sysUser.FileName, ".go")
+	addSysUserCodePath("repo.go", "internal/repo/"+sysUser.FilePath, sysUser.FileName, ".go")
+	addSysUserCodePath("service.go", "internal/service/"+sysUser.FilePath, sysUser.FileName, ".go")
+	addSysUserCodePath("router.go", "internal/router/"+sysUser.FilePath, sysUser.FileName, ".go")
+	addSysUserCodePath("model.go", "internal/model/"+sysUser.FilePath, sysUser.FileName, ".go")
+	addSysUserCodePath("gen.go", "cmd/gorm/gen/"+sysUser.FilePath, sysUser.FileName, ".go")
 
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"
@@ -66,7 +94,7 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 		_, err := os.Stat(goFilePaht)
 		if err == nil && isWebDebug == false {
 			// debug模式先删掉文件
-			if isTrue(debug) {
+			if isTrue(sysUser.debug) {
 				if ok == "n" {
 					log.Println(goFilePaht, "🍵 Hi 文件已存在...")
 					path, _ := os.Getwd()
@@ -136,14 +164,12 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 		}
 		defer file.Close()
 
-		moduleName, err = pkg.GetModuleName("go.mod")
+		sysUser.ModuleName, err = pkg.GetModuleName("go.mod")
 		if err != nil {
 			infoChan <- pkg.CommandInfo{Message: "🐮🐴❗️请先初始化项目: fuxi project -n 项目名称", Error: err}
 			return
 		}
-		if err = tmplx.Execute(file, SysUser{
-			ModuleName: moduleName,
-		}); err != nil {
+		if err = tmplx.Execute(file, sysUser); err != nil {
 			infoChan <- pkg.CommandInfo{Message: "⚠️❎🐮🐴代码渲染失败....", Error: err}
 		}
 		if data.FileExtension == ".go" {
@@ -158,9 +184,15 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 		return
 	}
 
-	InsertInitRouterCode(moduleName, "sysUser")
-	InsertGormGenCode(moduleName, "sysUser")
-	InsertSetDB(moduleName, "sysUser")
+	if isTrue(sysUser.isSysUser) {
+		InsertInitRouterCode(sysUser.ModuleName, "system/", "sysUser")
+		InsertGormGenCode(sysUser.ModuleName, "system/", "sysUser")
+		InsertSetDB(sysUser.ModuleName, "system/", "sysUser")
+	} else {
+		InsertInitRouterCode(sysUser.ModuleName, "", sysUser.FilePath)
+		InsertGormGenCode(sysUser.ModuleName, "", sysUser.FilePath)
+		InsertSetDB(sysUser.ModuleName, "", sysUser.FilePath)
+	}
 
 	infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在拉取依赖包...", Error: nil}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -181,7 +213,7 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 	}
 	_ = pkg.RunCommandNoOutput("fuxi", "gen")
 	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
-	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 系统用户模块成功", filepath.Base(moduleName)), Error: nil}
+	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 系统用户模块成功", filepath.Base(sysUser.ModuleName)), Error: nil}
 }
 
 func addSysUserCodePath(tmplPath, filepath, filename string, suffix string) {

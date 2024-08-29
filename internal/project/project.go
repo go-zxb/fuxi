@@ -17,7 +17,6 @@ import (
 
 var (
 	projectName = ""
-	moduleName  = ""
 	debug       = ""
 	isWebDebug  = false
 )
@@ -238,13 +237,10 @@ func zipProjectCode() error {
 	}
 	zipFileName := fmt.Sprintf(".fuxi/%s/%s.zip", projectName, time.Now().Format("20060102150405"))
 
-	exists, err := pkg.PathExists(path.Dir(zipFileName))
-	if err != nil {
-		return err
-	}
+	exists, _ := pkg.PathExists(path.Dir(zipFileName))
 
 	if !exists {
-		err = os.MkdirAll(path.Dir(zipFileName), os.ModePerm)
+		err := os.MkdirAll(path.Dir(zipFileName), os.ModePerm)
 		if err != nil {
 			return err
 		}

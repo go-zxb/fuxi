@@ -2,32 +2,25 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"{{.ModuleName}}/internal/model/sysUser"
-	service "{{.ModuleName}}/internal/service/sysUser"
+	"{{.ModuleName}}/internal/model/{{.FilePath}}"
+	service "{{.ModuleName}}/internal/service/{{.FilePath}}"
 	"{{.ModuleName}}/pkg/response"
 )
 
-type SysUserApi struct {
+type {{.StructName}}Api struct {
 	reply response.IResponse
-	sv    *service.SysUserService
+	sv    *service.{{.StructName}}Service
 }
 
-func NewSysUserApi(sv *service.SysUserService) *SysUserApi {
-	return &SysUserApi{reply: response.New(), sv: sv}
+func New{{.StructName}}Api(sv *service.{{.StructName}}Service) *{{.StructName}}Api {
+	return &{{.StructName}}Api{reply: response.New(), sv: sv}
 }
 
-// GetUserInfo
-// @model model.SysUserQuery
+// GetSelfInfo
 // @auth true
-func (a *SysUserApi) GetUserInfo(ctx *gin.Context) {
-	var oo model.SysUserQuery
-	err := ctx.ShouldBindQuery(&oo)
-	if err != nil {
-		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
-		return
-	}
-
-	list, err := a.sv.GetUserInfo(&oo)
+func (a *{{.StructName}}Api) GetSelfInfo(ctx *gin.Context) {
+	uid := ctx.GetString("uid")
+	list, err := a.sv.GetSelfInfo(uid)
 	if err != nil {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
@@ -37,7 +30,7 @@ func (a *SysUserApi) GetUserInfo(ctx *gin.Context) {
 
 // Login
 // @model model.Login
-func (a *SysUserApi) Login(ctx *gin.Context) {
+func (a *{{.StructName}}Api) Login(ctx *gin.Context) {
 	var oo model.Login
 	if err := ctx.ShouldBindJSON(&oo); err != nil {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
@@ -53,8 +46,8 @@ func (a *SysUserApi) Login(ctx *gin.Context) {
 
 // Register
 // @model model.Login
-func (a *SysUserApi) Register(ctx *gin.Context) {
-	var oo model.SysUser
+func (a *{{.StructName}}Api) Register(ctx *gin.Context) {
+	var oo model.{{.StructName}}
 	if err := ctx.ShouldBindJSON(&oo); err != nil {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return

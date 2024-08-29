@@ -277,9 +277,9 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 		return
 	}
 
-	InsertInitRouterCode(packagename, filename)
-	InsertGormGenCode(packagename, filename)
-	InsertSetDB(packagename, filename)
+	InsertInitRouterCode(packagename, "", filename)
+	InsertGormGenCode(packagename, "", filename)
+	InsertSetDB(packagename, "", filename)
 
 	// 运行mod tidy
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :添加成功正在 go mod tidy...", Error: nil}
@@ -353,11 +353,11 @@ func TmplExecute(packageName, goFilePath string, data *PathData, genCode *model.
 }
 
 // InsertInitRouterCode 插入初始化路由代码
-func InsertInitRouterCode(moduleName, filename string) {
+func InsertInitRouterCode(moduleName, middle, filename string) {
 	// 自动插入初始化路由代码
 	a := newapi.ASTRouter{
 		Name:     filename,
-		Imports:  []string{fmt.Sprintf("%s/internal/router/%s", moduleName, filename)},
+		Imports:  []string{fmt.Sprintf("%s/internal/router/%s%s", moduleName, middle, filename)},
 		FilePath: "core/core.go",
 	}
 	// 自动插入初始化路由代码
@@ -368,11 +368,11 @@ func InsertInitRouterCode(moduleName, filename string) {
 }
 
 // InsertGormGenCode 插入gormGen代码
-func InsertGormGenCode(moduleName, filename string) {
+func InsertGormGenCode(moduleName, middle, filename string) {
 	// 自动插入初始化路由代码
 	a := newapi.ASTGormGen{
 		Name:     filename,
-		Imports:  []string{fmt.Sprintf("%s/%s/%s", moduleName, gormGenPath, filename)},
+		Imports:  []string{fmt.Sprintf("%s/%s/%s%s", moduleName, gormGenPath, middle, filename)},
 		FilePath: gormGenPath + "/main.go",
 	}
 	// 自动插入初始化路由代码
@@ -382,13 +382,13 @@ func InsertGormGenCode(moduleName, filename string) {
 	}
 }
 
-func InsertSetDB(moduleName, filename string) {
+func InsertSetDB(moduleName, middle, filename string) {
 	// 自动插入初始化路由代码
 	a := newapi.ASTSetDB{
 		Name: filename,
 		Imports: map[string]string{
-			"query": fmt.Sprintf("%s/%s/%s/query", moduleName, modelPath, filename),
-			"model": fmt.Sprintf("%s/%s/%s", moduleName, modelPath, filename)},
+			"query": fmt.Sprintf("%s/%s/%s%s/query", moduleName, modelPath, middle, filename),
+			"model": fmt.Sprintf("%s/%s/%s%s", moduleName, modelPath, middle, filename)},
 		FilePath: "core/data/mysql.go",
 	}
 	// 自动插入初始化路由代码

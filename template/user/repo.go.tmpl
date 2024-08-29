@@ -1,0 +1,38 @@
+package repo
+
+import (
+	"{{.ModuleName}}/internal/model/{{.FilePath}}"
+	"{{.ModuleName}}/internal/model/{{.FilePath}}/query"
+	service "{{.ModuleName}}/internal/service/{{.FilePath}}"
+)
+
+type {{.StructName}}Repo struct {
+	Q *query.Query
+}
+
+func New{{.StructName}}Repo() service.{{.StructName}}RepoInterface {
+	return &{{.StructName}}Repo{Q: query.Q}
+}
+
+
+func (r *{{.StructName}}Repo) Login(u *model.Login) (*model.{{.StructName}}, error) {
+	Q := r.Q.{{.StructName}}
+	q := Q.Where(Q.UserName.Eq(u.UserName))
+	return q.First()
+}
+
+func (r *{{.StructName}}Repo) Register(u *model.{{.StructName}}) error {
+	return r.Q.{{.StructName}}.Create(u)
+}
+
+func (r *{{.StructName}}Repo) GetSelfInfo(uid string) (*model.{{.StructName}}, error) {
+	Q := r.Q.{{.StructName}}
+	q := Q.Where(Q.UID.Eq(uid))
+	return q.First()
+}
+
+func (r *{{.StructName}}Repo) Get{{.StructName}}Info(username string) (*model.{{.StructName}}, error) {
+	Q := r.Q.{{.StructName}}
+	q := Q.Where(Q.UserName.Eq(username))
+	return q.First()
+}

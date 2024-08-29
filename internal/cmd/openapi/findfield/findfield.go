@@ -33,11 +33,11 @@ func FindStruct(funcName string) (files []*FiledInfo, structName, auth string, e
 				}
 				return nil
 			}
-			//处理注释
-			//index := strings.Index(modelComment, "@model")
+			// 处理注释
+			// index := strings.Index(modelComment, "@model")
 			cmmSlice := strings.Split(modelComment, " ")
 			slice := strings.Split(cmmSlice[len(cmmSlice)-1:][0], ".")
-			//获取结构体字段
+			// 获取结构体字段
 			fields, _ := GetStruct(".", slice...)
 			if len(fields) == 0 {
 				log.Println("❌", "没有找到结构体数据,请注意注释格式")
@@ -72,7 +72,7 @@ func FunctionComments(path string, funcName string) (val, auth string) {
 		switch x := n.(type) {
 		case *ast.FuncDecl:
 			if x.Doc != nil && x.Name.Name == funcName {
-				//fmt.Printf("Method: %s\n", x.Name.Name)
+				// fmt.Printf("Method: %s\n", x.Name.Name)
 				for _, comment := range x.Doc.List {
 					if strings.Contains(comment.Text, "@model") {
 						val = comment.Text
@@ -95,7 +95,7 @@ func GetStruct(path string, pack ...string) ([]*FiledInfo, string) {
 	var modelPath string
 	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			//log.Println(path)
+			// log.Println(path)
 			// 创建一个新的文件集
 			fset := token.NewFileSet()
 			// 解析源代码
@@ -159,12 +159,12 @@ func HandleField(field *ast.Field, pack, end string) *FiledInfo {
 			Comment:   fmt.Sprintf("%v", strings.TrimSpace(field.Comment.Text())),
 			ChildType: "ast.Ident",
 		}
-		//fmt.Println("*ast.Ident", field.Names[0].Name, field.Type.(*ast.Ident).Name)
+		// fmt.Println("*ast.Ident", field.Names[0].Name, field.Type.(*ast.Ident).Name)
 	case "*ast.StarExpr":
 		_, ok := field.Type.(*ast.StarExpr)
 		if ok {
-			//fmt.Println("继承结构体名称:", array.X.(*ast.SelectorExpr).Sel.Name)
-			//fmt.Println("引用包名:", array.X.(*ast.SelectorExpr).X.(*ast.Ident).Name)
+			// fmt.Println("继承结构体名称:", array.X.(*ast.SelectorExpr).Sel.Name)
+			// fmt.Println("引用包名:", array.X.(*ast.SelectorExpr).X.(*ast.Ident).Name)
 			name_x := field.Type.(*ast.SelectorExpr).X.(*ast.Ident).Name
 			name_sel := field.Type.(*ast.SelectorExpr).Sel.Name
 			var fd = make([]*FiledInfo, 0)
@@ -177,7 +177,7 @@ func HandleField(field *ast.Field, pack, end string) *FiledInfo {
 
 		}
 	case "*ast.SelectorExpr":
-		//fmt.Println("类型:SelectorExpr", "字段名:", field.Names[0].Name, "继承结构体名称:",
+		// fmt.Println("类型:SelectorExpr", "字段名:", field.Names[0].Name, "继承结构体名称:",
 		//	field.Type.(*ast.SelectorExpr).Sel.Name, "引用包名:", field.Type.(*ast.SelectorExpr).X.(*ast.Ident).Name)
 		name_x := field.Type.(*ast.SelectorExpr).X.(*ast.Ident).Name
 		name_sel := field.Type.(*ast.SelectorExpr).Sel.Name
@@ -190,10 +190,10 @@ func HandleField(field *ast.Field, pack, end string) *FiledInfo {
 		field_ = handleF(field, t, name_sel, end, "ArrayType.ast.SelectorExpr", fd)
 
 	case "*ast.ArrayType":
-		//fmt.Println("切片类型:", reflect.TypeOf(field.Type.(*ast.ArrayType).Elt).String())
+		// fmt.Println("切片类型:", reflect.TypeOf(field.Type.(*ast.ArrayType).Elt).String())
 		switch reflect.TypeOf(field.Type.(*ast.ArrayType).Elt).String() {
 		case "*ast.Ident":
-			//fmt.Println("ArrayType ast.Ident", field.Names[0].Name, field.Type.(*ast.ArrayType).Elt.(*ast.Ident).Name)
+			// fmt.Println("ArrayType ast.Ident", field.Names[0].Name, field.Type.(*ast.ArrayType).Elt.(*ast.Ident).Name)
 			name_x := pack
 			name_sel := field.Type.(*ast.ArrayType).Elt.(*ast.Ident).Name
 			var fd = make([]*FiledInfo, 0)
@@ -206,11 +206,11 @@ func HandleField(field *ast.Field, pack, end string) *FiledInfo {
 		case "*ast.SelectorExpr":
 			array, ok := field.Type.(*ast.ArrayType)
 			if ok {
-				//fmt.Println("类型:", "ArrayType,SelectorExpr")
-				//fmt.Println("字段名:", field.Names[0].Name)
-				//fmt.Println("字段结构体SelectorExpr:", array.Elt)
-				//fmt.Println("继承结构体名称:", array.Elt.(*ast.SelectorExpr).Sel.Name)
-				//fmt.Println("引用包名:", array.Elt.(*ast.SelectorExpr).X.(*ast.Ident).Name)
+				// fmt.Println("类型:", "ArrayType,SelectorExpr")
+				// fmt.Println("字段名:", field.Names[0].Name)
+				// fmt.Println("字段结构体SelectorExpr:", array.Elt)
+				// fmt.Println("继承结构体名称:", array.Elt.(*ast.SelectorExpr).Sel.Name)
+				// fmt.Println("引用包名:", array.Elt.(*ast.SelectorExpr).X.(*ast.Ident).Name)
 				name_x := array.Elt.(*ast.SelectorExpr).X.(*ast.Ident).Name
 				name_sel := array.Elt.(*ast.SelectorExpr).Sel.Name
 				var fd = make([]*FiledInfo, 0)
@@ -225,11 +225,11 @@ func HandleField(field *ast.Field, pack, end string) *FiledInfo {
 		case "*ast.StarExpr":
 			array, ok := field.Type.(*ast.ArrayType).Elt.(*ast.StarExpr)
 			if ok {
-				//fmt.Println("类型:", "ArrayType,StarExpr")
-				//fmt.Println("字段名:", field.Names[0].Name)
-				//fmt.Println("字段结构体SelectorExpr:", array.X.(*ast.SelectorExpr))
-				//fmt.Println("继承结构体名称:", array.X.(*ast.SelectorExpr).Sel.Name)
-				//fmt.Println("引用包名:", array.X.(*ast.SelectorExpr).X.(*ast.Ident).Name)
+				// fmt.Println("类型:", "ArrayType,StarExpr")
+				// fmt.Println("字段名:", field.Names[0].Name)
+				// fmt.Println("字段结构体SelectorExpr:", array.X.(*ast.SelectorExpr))
+				// fmt.Println("继承结构体名称:", array.X.(*ast.SelectorExpr).Sel.Name)
+				// fmt.Println("引用包名:", array.X.(*ast.SelectorExpr).X.(*ast.Ident).Name)
 
 				name_x := array.X.(*ast.SelectorExpr).X.(*ast.Ident).Name
 				name_sel := array.X.(*ast.SelectorExpr).Sel.Name
@@ -246,7 +246,7 @@ func HandleField(field *ast.Field, pack, end string) *FiledInfo {
 	case "*ast.MapType":
 		key := field.Type.(*ast.MapType).Key
 		ty := field.Type.(*ast.MapType).Value
-		//fmt.Println("map type", key,ty)
+		// fmt.Println("map type", key,ty)
 		tag := ""
 		if field.Tag != nil {
 			tag = field.Tag.Value
