@@ -40,7 +40,7 @@ func (r *{{.StructName | initialLetter}}Router) Init{{.StructName | initialLette
     groupV1.GET("/{{.StructName}}s", r.api.Get{{.StructName | initialLetter}}List)
     groupV1.GET("/{{.StructName}}s/:id", r.api.Get{{.StructName | initialLetter}})
     groupV1.POST("/{{.StructName}}s", r.api.Create{{.StructName | initialLetter}})
-    groupV1.PUT("/{{.StructName}}s/:id", r.api.Update{{.StructName | initialLetter}})
+    groupV1.PUT("/{{.StructName}}s", r.api.Update{{.StructName | initialLetter}})
     groupV1.DELETE("/{{.StructName}}s/:id", r.api.Delete{{.StructName | initialLetter}})
 }
 }

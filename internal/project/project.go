@@ -208,7 +208,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
 		}
 	}
-
+	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
 	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 项目成功", projectName), Error: nil}
 	si := `程序流畅心自喜😊,
 助人为乐情更怡🤗;

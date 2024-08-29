@@ -1,8 +1,6 @@
 package addapi
 
 import (
-	"strings"
-
 	"github.com/go-zxb/fuxi/pkg"
 )
 
@@ -115,9 +113,9 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 				a.code = queryNoParams
 			} else {
 				a.code = queryList
-				if !strings.Contains(a.Api, "/:id") {
-					a.Api += "/:id"
-				}
+				// if !strings.Contains(a.Api, "/:id") {
+				// 	a.Api += "/:id"
+				// }
 			}
 		}
 
@@ -125,9 +123,9 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 		a.code = create
 	case "PUT":
 		a.code = updateCode
-		if !strings.Contains(a.Api, "/:id") {
-			a.Api += "/:id"
-		}
+		// if !strings.Contains(a.Api, "/:id") {
+		// 	a.Api += "/:id"
+		// }
 	case "DELETE":
 		a.code = delete
 	default:
