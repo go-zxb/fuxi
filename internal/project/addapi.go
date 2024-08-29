@@ -111,7 +111,11 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	}
 
 	if api == "" {
-		api = strings.ToLower(apiFunc)
+		api = pkg.InitialLetterToLower(apiFunc)
+		// 处理路由path uri 目前默认是/:id
+		if strings.ToUpper(method) == "GET" || strings.ToUpper(method) == "DELETE" {
+			api = api + "/:id"
+		}
 	}
 
 	apiAdd := addapi.AddApi{
