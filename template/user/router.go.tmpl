@@ -30,11 +30,11 @@ func New{{.StructName}}Router(engine *gin.Engine) *{{.StructName}}Router {
 func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
 	{
 		// v1
-		groupV1 := r.engine.Group("api/v1/{{.FileName}}")
-		authAPi := r.engine.Group("api/v1/{{.FileName}}").Use(middleware.JwtAuth())
-		authAPi.GET("/getSelfInfo", r.api.GetSelfInfo)
-		groupV1.POST("/login", r.api.Login)
-		groupV1.POST("/register", r.api.Register)
+		groupV1 := r.engine.Group("api/v1")
+		authAPi := r.engine.Group("api/v1").Use(middleware.JwtAuth())
+		authAPi.GET("/{{.FileName}}/getSelfInfo", r.api.GetSelfInfo)
+		groupV1.POST("/{{.FileName}}/login", r.api.Login)
+		groupV1.POST("/{{.FileName}}/register", r.api.Register)
 
 	}
 }

@@ -281,6 +281,9 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 	InsertGormGenCode(packagename, "", filename)
 	InsertSetDB(packagename, "", filename)
 
+	_ = pkg.RunCommandNoOutput("fuxi", "gen")
+	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
+
 	// 运行mod tidy
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴 ✅ :添加成功正在 go mod tidy...", Error: nil}
 	err = pkg.RunCommand("go", "mod", "tidy")
@@ -307,7 +310,7 @@ func createCodeHandle(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
 		}
 	}
-	_ = pkg.RunCommand("fuxi", "openapi")
+
 	gushi := `代码精妙我自豪😎，
 分享经验乐陶陶😄；
 你我同欢心相照👫，

