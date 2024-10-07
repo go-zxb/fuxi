@@ -32,7 +32,7 @@ func New{{.StructName}}Service(repo {{.StructName}}RepoInterface) *{{.StructName
   		conf: config.GetConfig(),
   	}
   	go func() {
-  		_ = s.Register(&model.{{.StructName}}{UserName: "admin", Password: "123456"})
+  		_ = s.Register(&model.{{.StructName}}{UserName: "admin", Password: "123456",Role: "admin"})
   	}()
   	return s
 }

@@ -367,7 +367,15 @@ func InsertInitRouterCode(moduleName, middle, filename string) {
 	if err := a.InsetCode(); err != nil {
 		log.Println(err)
 	}
-
+	e := newapi.Enforcer{
+		AST: model.AST{
+			Name:        "casbin",
+			ImportsName: []string{"casbinService"},
+			Imports:     []string{fmt.Sprintf("%s/internal/service/system/%s", moduleName, "casbin")},
+			FilePath:    "core/core.go",
+		},
+	}
+	e.Enforcer()
 }
 
 // InsertGormGenCode 插入gormGen代码

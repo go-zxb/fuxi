@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/casbin/casbin/v2"
 	api "{{.ModuleName}}/internal/api/{{.FilePath}}"
 	repo "{{.ModuleName}}/internal/repo/{{.FilePath}}"
 	service "{{.ModuleName}}/internal/service/{{.FilePath}}"
@@ -17,11 +18,13 @@ type {{.StructName}}ApiInterface interface {
 type {{.StructName}}Router struct {
 	engine *gin.Engine
 	api    {{.StructName}}ApiInterface
+	enforcer *casbin.CachedEnforcer
 }
 
-func New{{.StructName}}Router(engine *gin.Engine) *{{.StructName}}Router {
+func New{{.StructName}}Router(engine *gin.Engine,enforcer *casbin.CachedEnforcer) *{{.StructName}}Router {
 	return &{{.StructName}}Router{
 		engine: engine,
+		enforcer: enforcer,
 		api:    api.New{{.StructName}}Api(service.New{{.StructName}}Service(repo.New{{.StructName}}Repo())),
 	}
 }
@@ -31,10 +34,10 @@ func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
 	{
 		// v1
 		groupV1 := r.engine.Group("api/v1")
-		authAPi := r.engine.Group("api/v1").Use(middleware.JwtAuth())
-		authAPi.GET("/{{.FileName}}/getSelfInfo", r.api.GetSelfInfo)
-		groupV1.POST("/{{.FileName}}/login", r.api.Login)
-		groupV1.POST("/{{.FileName}}/register", r.api.Register)
+		authGroupV1 := r.engine.Group("api/v1").Use(middleware.JwtAuth())
+		groupV1.POST("/{{.FileName}}s/login", r.api.Login)
+		groupV1.POST("/{{.FileName}}s/register", r.api.Register)
+		authGroupV1.DELETE("/{{.FileName}}s/", nil)
 
 	}
 }

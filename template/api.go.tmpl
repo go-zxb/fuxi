@@ -68,6 +68,7 @@ func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}(
 }
 
 // Get{{.StructName | initialLetter}}List  获取{{.StructName}}列表
+// @model model.{{.StructName | initialLetter}}Query
 // @auth true
 func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}List(ctx *gin.Context) {
 	var oo model.{{.StructName | initialLetter}}Query

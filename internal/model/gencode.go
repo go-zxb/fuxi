@@ -1,5 +1,7 @@
 package model
 
+import "github.com/go-zxb/fuxi/internal/ast/base"
+
 type TmplData struct {
 	ModuleName  string
 	StructName  string
@@ -30,4 +32,12 @@ type CodeModel struct {
 	StructName string           `json:"structName"`
 	Table      string           `json:"table"`
 	Desc       string           `json:"desc"`
+}
+
+type AST struct {
+	Name        string
+	ImportsName []string
+	Imports     []string
+	FilePath    string
+	FuXiAst     base.FuXiAst
 }

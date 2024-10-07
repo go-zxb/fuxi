@@ -49,6 +49,10 @@ func (a *ASTRouter) InsetCode() error {
 										Kind:  token.STRING,
 										Value: "engine",
 									},
+									&ast.BasicLit{
+										Kind:  token.STRING,
+										Value: "enforcer",
+									},
 								},
 							},
 							Sel: ast.NewIdent(fmt.Sprintf("Init%sRouter", pkg.InitialLetter(a.Name))),

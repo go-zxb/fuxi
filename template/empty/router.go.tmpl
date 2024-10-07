@@ -2,9 +2,11 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/casbin/casbin/v2"
 	api "{{.ModuleName}}/internal/api/{{.StructName}}"
 	repo "{{.ModuleName}}/internal/repo/{{.StructName}}"
 	service "{{.ModuleName}}/internal/service/{{.StructName}}"
+	"{{.ModuleName}}/middleware"
 )
 
 type {{.StructName | initialLetter}}ApiInterface interface {
@@ -14,12 +16,14 @@ type {{.StructName | initialLetter}}ApiInterface interface {
 type {{.StructName | initialLetter}}Router struct {
 	engine *gin.Engine
 	api    {{.StructName | initialLetter}}ApiInterface
+	enforcer *casbin.CachedEnforcer
 }
 
 
-func New{{.StructName | initialLetter}}Router(engine *gin.Engine) *{{.StructName | initialLetter}}Router {
+func New{{.StructName | initialLetter}}Router(engine *gin.Engine，enforcer *casbin.CachedEnforcer) *{{.StructName | initialLetter}}Router {
 	return &{{.StructName | initialLetter}}Router{
 		engine: engine,
+		enforcer: enforcer,
 		api: api.New{{.StructName | initialLetter}}Api(
 			service.New{{.StructName | initialLetter}}Service(
 				repo.New{{.StructName | initialLetter}}Repo(),
@@ -33,7 +37,9 @@ func (r *{{.StructName | initialLetter}}Router) Init{{.StructName | initialLette
 {
     //v1
     groupV1:= r.engine.Group("api/v1")
+    authGroupV1 := r.engine.Group("api/v1").Use(middleware.JwtAuth(),middleware.Casbin(r.enforcer))
     groupV1.GET("/{{.StructName}}s", nil)
+    authGroupV1.POST("/{{.StructName}}s", nil)
 
 }
 }

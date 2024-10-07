@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -111,7 +112,11 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 					if !isZip {
 						err = zipSysUserCode()
 						if err != nil {
-							log.Fatalln("🚶‍♀️告辞🚶 备份失败🎒", err)
+							if strings.Contains(err.Error(), "The system cannot find the file specified") {
+								log.Println("⚠️ 老家伙,文件不存在, 继续吧....")
+							} else {
+								log.Fatalln("🚶‍♀️告辞🚶 备份失败🎒", err)
+							}
 						}
 						isZip = true
 					}
@@ -192,6 +197,11 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 		InsertInitRouterCode(sysUser.ModuleName, "", sysUser.FilePath)
 		InsertGormGenCode(sysUser.ModuleName, "", sysUser.FilePath)
 		InsertSetDB(sysUser.ModuleName, "", sysUser.FilePath)
+	}
+
+	err := pkg.RunCommand("go", "get", "gorm.io/gen")
+	if err != nil {
+		fmt.Println(err)
 	}
 	_ = pkg.RunCommandNoOutput("fuxi", "gen")
 	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
