@@ -1,0 +1,133 @@
+package service
+
+import (
+	"errors"
+	"log"
+
+	"github.com/casbin/casbin/v2"
+	casbinModel "github.com/casbin/casbin/v2/model"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
+	"{{.ModuleName}}/core/data"
+	model "{{.ModuleName}}/internal/model/system/casbin"
+	"gorm.io/gorm"
+)
+
+const modelText = `
+[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[role_definition]
+g = _, _
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = g(r.sub, p.sub) && keyMatch(r.obj, p.obj) && r.act == p.act
+`
+
+// CasbinRepoInterface repo依赖倒置接口
+type CasbinRepoInterface interface {
+	Update(roles []*model.Casbin) error
+	Create(roles []*model.Casbin) error
+	AuthApiList(role string) ([]*model.Casbin, error)
+}
+
+type CasbinService struct {
+	repo     CasbinRepoInterface
+	enforcer *casbin.CachedEnforcer
+	rdb      *data.Redis
+}
+
+func NewCasbinService(repo CasbinRepoInterface) *CasbinService {
+	s := &CasbinService{
+		repo: repo,
+		rdb:  data.GetRedis(),
+	}
+	_ = s.InitCasbinRoleRule()
+	return s
+}
+
+func NewCasbin(db *gorm.DB) *casbin.CachedEnforcer {
+	// 使用 GORM 适配器创建 Casbin 的 enforcer 对象
+	a, _ := gormadapter.NewAdapterByDB(db)
+	newModelFromString, err := casbinModel.NewModelFromString(modelText)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	enforcer, _ := casbin.NewCachedEnforcer(newModelFromString, a)
+
+	// 将策略规则从数据库加载到 Casbin 中
+	if err := enforcer.LoadPolicy(); err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	return enforcer
+}
+
+// InitCasbinRoleRule 初始化角色默认权限规则
+func (s *CasbinService) InitCasbinRoleRule() error {
+	apiList, _ := s.repo.AuthApiList("admin")
+	if len(apiList) > 0 {
+		return nil
+	}
+	defaultAdminRole := "admin"
+	// defaultRole := "user"
+	casbinRule := []*model.Casbin{
+
+		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/casbin", V2: "PUT"},
+		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/casbins", V2: "GET"},
+
+		// 系统用户
+		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers", V2: "DELETE"},
+		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers/*", V2: "DELETE"},
+		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers/*", V2: "GET"},
+		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers", V2: "GET"},
+
+	}
+
+	return s.repo.Create(casbinRule)
+}
+
+// ReLoadPolicy 重新加载权限数据
+func (s *CasbinService) ReLoadPolicy() error {
+	// 将策略规则从数据库加载到 Casbin 中
+	if err := s.enforcer.LoadPolicy(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+// RemoveFilteredPolicy 移除xx角色已分配的权限
+func (s *CasbinService) RemoveFilteredPolicy(role string) error {
+	_, err := s.enforcer.RemoveFilteredPolicy(0, role)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (s *CasbinService) Update(roles *model.CasbinUpdate) error {
+	return nil
+}
+
+// AuthApiList 获取已分配的角色资源列表
+func (s *CasbinService) AuthApiList(role string) (list []*model.Casbin, err error) {
+	list, err = s.repo.AuthApiList(role)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(list) == 0 {
+		return nil, errors.New("无数据")
+	}
+	return list, nil
+}

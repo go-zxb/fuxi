@@ -1,0 +1,56 @@
+package api
+
+import (
+	"github.com/gin-gonic/gin"
+	model "{{.ModuleName}}/internal/model/system/casbin"
+	service "{{.ModuleName}}/internal/service/system/casbin"
+	"{{.ModuleName}}/pkg/response"
+)
+
+type CasbinApi struct {
+	reply response.IResponse
+	sv    *service.CasbinService
+}
+
+func NewCasbinApi(sv *service.CasbinService) *CasbinApi {
+	return &CasbinApi{reply: response.New(), sv: sv}
+}
+
+// Update
+// @model model.CasbinUpdate
+// @auth true
+func (r *CasbinApi) Update(ctx *gin.Context) {
+	var c model.CasbinUpdate
+	err := ctx.ShouldBindJSON(&c)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+
+	err = r.sv.Update(&c)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+
+}
+
+// AuthApiList
+// @model model.CasbinQuery
+// @auth true
+func (r *CasbinApi) AuthApiList(ctx *gin.Context) {
+	role := ctx.Query("role")
+	if role == "" {
+		r.reply.New().WithCode(400).WithMessage("请求参数有误").Fail(ctx)
+		return
+	}
+	list, err := r.sv.AuthApiList(role)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+
+	r.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+
+}

@@ -1,0 +1,28 @@
+package middleware
+
+import (
+	"net/http"
+
+	"github.com/casbin/casbin/v2"
+	"github.com/gin-gonic/gin"
+	"{{.ModuleName}}/pkg/response"
+)
+
+func Casbin(enforcer *casbin.CachedEnforcer) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		reply := response.Response{}
+		// 权限验证
+		enforce, err := enforcer.Enforce(ctx.GetString("role"), ctx.Request.URL.Path, ctx.Request.Method)
+		if err != nil {
+			reply.WithCode(http.StatusInternalServerError).WithMessage(err.Error()).Fail(ctx)
+			ctx.Abort()
+			return
+		}
+		if !enforce {
+			reply.WithCode(http.StatusForbidden).WithMessage("无权限").Fail(ctx)
+			ctx.Abort()
+			return
+		}
+		ctx.Next()
+	}
+}

@@ -1,0 +1,44 @@
+package router
+
+import (
+	"github.com/casbin/casbin/v2"
+	"github.com/gin-gonic/gin"
+	api "{{.ModuleName}}/internal/api/system/casbin"
+	repo "{{.ModuleName}}/internal/repo/system/casbin"
+	service "{{.ModuleName}}/internal/service/system/casbin"
+	"{{.ModuleName}}/middleware"
+)
+
+type CasbinApiInterface interface {
+	Update(ctx *gin.Context)
+	AuthApiList(ctx *gin.Context)
+}
+
+type CasbinRouter struct {
+	engine   *gin.Engine
+	api      CasbinApiInterface
+	enforcer *casbin.CachedEnforcer
+}
+
+func NewCasbinRouter(engine *gin.Engine, enforcer *casbin.CachedEnforcer) *CasbinRouter {
+	return &CasbinRouter{
+		engine:   engine,
+		enforcer: enforcer,
+		api: api.NewCasbinApi(
+			service.NewCasbinService(
+				repo.NewCasbinRepo(),
+			),
+		),
+	}
+}
+
+// InitCasbinRouter 初始化Casbin路由
+func (r *CasbinRouter) InitCasbinRouter() {
+	{
+		// v1
+		groupV1 := r.engine.Group("api/v1").Use(middleware.JwtAuth(), middleware.Casbin(r.enforcer))
+		groupV1.PUT("/casbins", r.api.Update)
+		groupV1.GET("/casbins", r.api.AuthApiList)
+
+	}
+}

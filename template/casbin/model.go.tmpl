@@ -1,0 +1,31 @@
+package model
+
+// Casbin casbin 结构体
+type Casbin struct {
+	ID uint `gorm:"primaryKey;autoIncrement" json:"id,omitempty"`
+	// 类型 p 或 g
+	Ptype string `gorm:"size:100" json:"ptype,omitempty"`
+	// 角色
+	V0 string `gorm:"size:100" json:"v0,omitempty"`
+	// 资源
+	V1 string `gorm:"size:100" json:"v1,omitempty"`
+	// 方法
+	V2 string `gorm:"size:100" json:"v2,omitempty"`
+	V3 string `gorm:"size:100" json:"v3,omitempty"`
+	V4 string `gorm:"size:100" json:"v4,omitempty"`
+	V5 string `gorm:"size:100" json:"v5,omitempty"`
+}
+
+func (Casbin) TableName() string {
+	return "casbin_rule"
+}
+
+// CasbinUpdate 用于返回xx角色能操作的的所有资源
+type CasbinUpdate struct {
+	Role string `json:"role"`
+	Data []uint `json:"data"`
+}
+
+type CasbinQuery struct {
+	Role string `json:"role"`
+}

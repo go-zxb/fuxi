@@ -1,0 +1,19 @@
+package gen
+
+import (
+	casbin "{{.ModuleName}}/internal/model/system/casbin"
+	"gorm.io/gen"
+)
+
+// GenCasbinBuild 生成casbin数据CRUD依赖文件
+func GenCasbinBuild() {
+	g := gen.NewGenerator(gen.Config{
+		OutPath: "internal/model/system/casbin/query",
+		Mode:    gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface,
+	})
+
+	g.ApplyBasic(
+		casbin.Casbin{},
+	)
+	g.Execute()
+}

@@ -1,0 +1,36 @@
+package repo
+
+import (
+	model "{{.ModuleName}}/internal/model/system/casbin"
+	"{{.ModuleName}}/internal/model/system/casbin/query"
+	service "{{.ModuleName}}/internal/service/system/casbin"
+)
+
+type CasbinRepo struct {
+	Q *query.Query
+}
+
+func NewCasbinRepo() service.CasbinRepoInterface {
+	return &CasbinRepo{Q: query.Q}
+}
+
+func (r *CasbinRepo) Create(roles []*model.Casbin) error {
+	if err := r.Q.Casbin.Create(roles...); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *CasbinRepo) Update(roles []*model.Casbin) error {
+	if err := r.Q.Casbin.Save(roles...); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *CasbinRepo) AuthApiList(role string) (list []*model.Casbin, err error) {
+	if list, err = r.Q.Casbin.Where(r.Q.Casbin.V0.Eq(role)).Find(); err != nil {
+		return nil, err
+	}
+	return list, err
+}
