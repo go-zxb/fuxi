@@ -20,7 +20,7 @@ type {{.StructName | initialLetter}}Router struct {
 }
 
 
-func New{{.StructName | initialLetter}}Router(engine *gin.Engine，enforcer *casbin.CachedEnforcer) *{{.StructName | initialLetter}}Router {
+func New{{.StructName | initialLetter}}Router(engine *gin.Engine, enforcer *casbin.CachedEnforcer) *{{.StructName | initialLetter}}Router {
 	return &{{.StructName | initialLetter}}Router{
 		engine: engine,
 		enforcer: enforcer,

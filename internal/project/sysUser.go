@@ -28,10 +28,10 @@ type SysUser struct {
 
 var sysUser = &SysUser{
 	ModuleName:  "",
-	StructName:  "User",
-	FileName:    "user",
-	FilePath:    "user",
-	GenFilePath: "user",
+	StructName:  "SysUser",
+	FileName:    "sysUser",
+	FilePath:    "sysUser",
+	GenFilePath: "sysUser",
 }
 
 func init() {
