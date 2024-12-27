@@ -83,6 +83,7 @@ func restartApp() {
 	}
 
 	ctx, cancel = context.WithCancel(context.Background())
+	pkg.RunCommandWithCtx(ctx, "fuxi", "openapi")
 	go pkg.RunCommandWithCtx(ctx, "go", "run", "main.go", "server")
 
 	log.Info("开始监听文件变动...")

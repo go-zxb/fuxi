@@ -32,7 +32,7 @@ func (r *CasbinApi) Update(ctx *gin.Context) {
 		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	r.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+	r.reply.New().WithMessage("成功").Success(ctx)
 
 }
 
@@ -51,6 +51,6 @@ func (r *CasbinApi) AuthApiList(ctx *gin.Context) {
 		return
 	}
 
-	r.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+	r.reply.New().WithMessage("成功").WithData(list).Success(ctx)
 
 }

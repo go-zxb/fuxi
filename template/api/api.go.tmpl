@@ -1,0 +1,155 @@
+package api
+
+import (
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	model "{{.ModuleName}}/internal/model/system/api"
+	service "{{.ModuleName}}/internal/service/system/api"
+	"{{.ModuleName}}/pkg/response"
+)
+
+type Api struct {
+	reply response.Response
+	sv    *service.ApiService
+}
+
+func NewApi(sv *service.ApiService) *Api {
+	return &Api{
+		sv: sv,
+	}
+}
+
+func (r *Api) InitApi() error {
+	return r.sv.InitApi()
+}
+
+// CreateApi
+// @model model.Api
+// @auth true
+func (r *Api) CreateApi(ctx *gin.Context) {
+	api := model.Api{}
+	err := ctx.ShouldBindJSON(&api)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err = r.sv.CreateApi(&api, ctx)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithMessage("成功").WithData(api).Success(ctx)
+
+}
+
+// GetApiList
+// @model model.ApiReq
+func (r *Api) GetApiList(ctx *gin.Context) {
+	req := model.ApiReq{}
+	err := ctx.ShouldBindQuery(&req)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+
+		return
+	}
+	list, err := r.sv.GetApiList(&req)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+
+		return
+	}
+	r.reply.New().WithMessage("成功").
+		WithData(list).
+		WithTotal(req.Total).
+		WithPage(req.Page).
+		WithPageSize(req.PageSize).
+		Success(ctx)
+}
+
+// GetApiAndPermissions
+// @auth true
+func (r *Api) GetApiAndPermissions(ctx *gin.Context) {
+	role := ctx.Query("role")
+	list, err := r.sv.GetApiAndPermissions(role)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithMessage("成功").
+		WithData(list).
+		Success(ctx)
+}
+
+// GetApiGroup
+// @auth true
+func (r *Api) GetApiGroup(ctx *gin.Context) {
+	list, err := r.sv.GetApiGroup()
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithMessage("成功").
+		WithData(list).
+		Success(ctx)
+}
+
+// UpdateApi
+// @model model.Api
+// @auth true
+func (r *Api) UpdateApi(ctx *gin.Context) {
+	user := model.Api{}
+	err := ctx.ShouldBindJSON(&user)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err = r.sv.UpdateApi(&user, ctx)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithMessage("成功").Success(ctx)
+
+}
+
+// DeleteApiById
+// @auth true
+func (r *Api) DeleteApiById(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Query("id"))
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	if id == 0 {
+		r.reply.New().WithCode(400).WithMessage("参数不能为空").Fail(ctx)
+		return
+	}
+	err = r.sv.DeleteApiById(uint(id), ctx)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithMessage("成功").Success(ctx)
+
+}
+
+// DeleteApiByIds
+// @auth true
+func (r *Api) DeleteApiByIds(ctx *gin.Context) {
+	api := struct {
+		Ids []uint `json:"ids"`
+	}{}
+	err := ctx.ShouldBindJSON(&api)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err = r.sv.DeleteApiByIds(api.Ids, ctx)
+	if err != nil {
+		r.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	r.reply.New().WithMessage("成功").Success(ctx)
+
+}

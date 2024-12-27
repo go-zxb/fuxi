@@ -36,7 +36,7 @@ func NewCasbinRouter(engine *gin.Engine, enforcer *casbin.CachedEnforcer) *Casbi
 func (r *CasbinRouter) InitCasbinRouter() {
 	{
 		// v1
-		groupV1 := r.engine.Group("api/v1").Use(middleware.JwtAuth(), middleware.Casbin(r.enforcer))
+		groupV1 := r.engine.Group("api/v1/sys").Use(middleware.JwtAuth(), middleware.Casbin(r.enforcer))
 		groupV1.PUT("/casbins", r.api.Update)
 		groupV1.GET("/casbins", r.api.AuthApiList)
 

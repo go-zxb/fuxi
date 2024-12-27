@@ -1,0 +1,96 @@
+package repo
+
+import (
+	"{{.ModuleName}}/core/data"
+	model "{{.ModuleName}}/internal/model/system/api"
+	"{{.ModuleName}}/internal/model/system/api/query"
+	casbinModel "{{.ModuleName}}/internal/model/system/casbin"
+	casbinRepo "{{.ModuleName}}/internal/repo/system/casbin"
+	apiService "{{.ModuleName}}/internal/service/system/api"
+	casbinService "{{.ModuleName}}/internal/service/system/casbin"
+)
+
+type ApiRepo struct {
+	rdb    *data.Redis
+	casbin casbinService.ICasbinRepoInterface
+	query  *query.Query
+}
+
+func NewApiRepo() apiService.IApiRepo {
+	return &ApiRepo{
+		rdb:    data.GetRedis(),
+		casbin: casbinRepo.NewCasbinRepo(),
+		query:  query.Q,
+	}
+}
+
+func (r *ApiRepo) CreateApi(api *model.Api) error {
+	return r.query.Api.Create(api)
+}
+
+func (r *ApiRepo) GetApiList(req *model.ApiReq) (list []*model.Api, err error) {
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+
+	if req.PageSize <= 0 || req.PageSize >= 100 {
+		req.PageSize = 20
+	}
+
+	q := r.query.Api.Where()
+
+	if req.Path != "" {
+		q = q.Where(r.query.Api.ApiGroup.Eq(req.Path))
+	}
+	if req.Group != "" {
+		q = q.Where(r.query.Api.ApiGroup.Eq(req.Group))
+	}
+	if req.Method != "" {
+		q = q.Where(r.query.Api.Method.Eq(req.Method))
+	}
+
+	count, err := q.Count()
+	if err != nil {
+		return nil, err
+	}
+	req.Total = count
+	q = q.Limit(req.PageSize).Offset((req.Page - 1) * req.PageSize)
+	list, err = q.Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return
+}
+
+func (r *ApiRepo) GetAllApi() (list []*model.Api, err error) {
+	if list, err = r.query.Api.Find(); err != nil {
+		return nil, err
+	}
+	return
+}
+
+func (r *ApiRepo) UpdateApi(api *model.Api) error {
+	if _, err := r.query.Api.Updates(api); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ApiRepo) DeleteApiById(id uint) error {
+	if _, err := r.query.Api.Where(r.query.Api.ID.Eq(id)).Delete(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ApiRepo) DeleteApiByIds(ids []uint) error {
+	if _, err := r.query.Api.Where(r.query.Api.ID.In(ids...)).Delete(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ApiRepo) AuthApiList(role string) (list []*casbinModel.Casbin, err error) {
+	return r.casbin.AuthApiList(role)
+}

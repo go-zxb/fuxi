@@ -32,12 +32,12 @@ func New{{.StructName}}Router(engine *gin.Engine,enforcer *casbin.CachedEnforcer
 // Init{{.StructName}}Router 初始化{{.StructName}}路由
 func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
 	{
-		// v1
-		groupV1 := r.engine.Group("api/v1")
-		authGroupV1 := r.engine.Group("api/v1").Use(middleware.JwtAuth())
-		groupV1.POST("/{{.FileName}}s/login", r.api.Login)
-		groupV1.POST("/{{.FileName}}s/register", r.api.Register)
-		authGroupV1.DELETE("/{{.FileName}}s/", nil)
+		groupV1 := r.engine.Group("api/v1/sys")
+    authGroupV1 := r.engine.Group("api/v1/sys").Use(middleware.JwtAuth())
+    groupV1.POST("users/login", r.api.Login)
+    authGroupV1.GET("users/info", r.api.GetSelfInfo)
+    groupV1.POST("users/register", r.api.Register)
+    authGroupV1.DELETE("users/", nil)
 
 	}
 }

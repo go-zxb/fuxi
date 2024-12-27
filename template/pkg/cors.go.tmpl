@@ -1,34 +1,32 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
+// Cors 是一个处理跨域请求的中间件
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		method := c.Request.Method
-		origin := c.Request.Header.Get("Origin")
+		// 设置允许的来源（可以是具体的域名或 "*" 表示允许所有域名）
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		// 设置允许的 HTTP 方法
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+		// 设置允许的 HTTP 头
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, Accept, X-Requested-With,Token")
+		// 设置允许客户端访问的响应头
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+		// 设置缓存预检请求的时间（秒）
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
 
-		// 允许的来源列表
-		allowedOrigins := []string{"http://example.com"}
-		for _, allowedOrigin := range allowedOrigins {
-			if origin == allowedOrigin {
-				c.Header("Access-Control-Allow-Origin", origin)
-				break
-			}
-		}
-
-		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
-		c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Token")
-		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
-		c.Header("Access-Control-Allow-Credentials", "true")
-
-		if method == "OPTIONS" {
+		// 处理预检请求（OPTIONS 请求）
+		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 
+		// 继续处理请求
 		c.Next()
 	}
 }

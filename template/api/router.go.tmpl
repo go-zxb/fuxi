@@ -1,0 +1,50 @@
+package router
+
+import (
+	"github.com/casbin/casbin/v2"
+	"github.com/gin-gonic/gin"
+	"{{.ModuleName}}/internal/api/system/api"
+	repo "{{.ModuleName}}/internal/repo/system/api"
+	service "{{.ModuleName}}/internal/service/system/api"
+	"{{.ModuleName}}/middleware"
+)
+
+type ApiInterface interface {
+	UpdateApi(ctx *gin.Context)
+	CreateApi(ctx *gin.Context)
+	GetApiList(ctx *gin.Context)
+	DeleteApiById(ctx *gin.Context)
+	GetApiGroup(ctx *gin.Context)
+	GetApiAndPermissions(ctx *gin.Context)
+}
+
+type ApiRouter struct {
+	engine   *gin.Engine
+	api      ApiInterface
+	enforcer *casbin.CachedEnforcer
+}
+
+func NewApiRouter(engine *gin.Engine, enforcer *casbin.CachedEnforcer) *ApiRouter {
+	return &ApiRouter{
+		engine:   engine,
+		enforcer: enforcer,
+		api:      api.NewApi(service.NewApiService(repo.NewApiRepo())),
+	}
+}
+
+// InitApiRouter 初始化SysApi路由
+func (r *ApiRouter) InitApiRouter() {
+	{
+		// v1
+		// groupV1 := r.engine.Group("api/v1/sys")
+		authGroupV1 := r.engine.Group("api/v1/sys").Use(middleware.JwtAuth())
+		authGroupV1.DELETE("apis/", nil)
+		authGroupV1.PUT("apis", r.api.UpdateApi)
+		authGroupV1.POST("apis", r.api.CreateApi)
+		authGroupV1.GET("apis/list", r.api.GetApiList)
+		authGroupV1.DELETE("apis", r.api.DeleteApiById)
+		authGroupV1.GET("apis/apiGroups", r.api.GetApiGroup)
+		authGroupV1.GET("apis/apiAndPermissions", r.api.GetApiAndPermissions)
+
+	}
+}

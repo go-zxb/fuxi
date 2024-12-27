@@ -83,6 +83,8 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	addProjectCodePath("consts.go", "utils", "consts", ".go")
 	addProjectCodePath("jwt.go", "pkg/jwt", "jwt", ".go")
 	addProjectCodePath("middlewareJwt.go", "middleware", "jwt", ".go")
+	addProjectCodePath("modelBase.go", "internal/model/base", "base", ".go")
+	addProjectCodePath("README.md", "", "README", ".md")
 
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}
 	ok := "n"
@@ -208,12 +210,17 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 			infoChan <- pkg.CommandInfo{Message: info.Message, Error: info.Error}
 		}
 	}
+	infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在创建相关模块文件...", Error: nil}
 
 	err := pkg.RunCommand("fuxi", "create:casbin")
 	if err != nil {
 		fmt.Println(err)
 	}
 	err = pkg.RunCommand("fuxi", "create:user")
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = pkg.RunCommand("fuxi", "create:apis")
 	if err != nil {
 		fmt.Println(err)
 	}

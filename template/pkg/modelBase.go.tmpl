@@ -1,0 +1,33 @@
+package base
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+// Model 通用的model
+type Model struct {
+	ID        uint           `json:"id" gorm:"primarykey"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"type:datetime;column:created_at;comment:应用创建时间"`
+	UpdatedAt time.Time      `json:"updatedAt" gorm:"type:datetime;column:updated_at;comment:应用信息更新时间"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+// PageReq 分页查询使用的结构体
+type PageReq struct {
+	// 这个字段对前端隐藏,只服务于后端
+	UID string ` form:"-" json:"-"`
+	// 前端传过来用于查询数据的ID
+	ID string ` form:"id" json:"id"`
+	// 所查询的数据总量
+	Total int64 `json:"total,omitempty"  form:"total"`
+	// 页
+	Page int `json:"page,omitempty"  form:"page"`
+	// 页大小
+	PageSize int `json:"pageSize,omitempty"  form:"pageSize"`
+	// 查询关键词
+	Keyword string `json:"keyword"  form:"keyword"`
+	// 查询类型
+	Type int `json:"type"  form:"type"`
+}
