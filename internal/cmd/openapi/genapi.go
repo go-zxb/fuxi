@@ -92,10 +92,11 @@ type Server struct {
 }
 
 type Route struct {
-	Method  string
-	Path    string
-	Handler string
-	Group   string
+	Method    string
+	Path      string
+	Handler   string
+	Group     string
+	GroupName string
 }
 
 var routes []*Route
@@ -117,7 +118,7 @@ func genDoc() {
 					if gp == "" {
 						gp = "没有分组的Api"
 					}
-					walkToGetRoute(path, gp)
+					ParseRoutes(path, gp)
 				}
 			}
 		}
@@ -160,37 +161,130 @@ func getGroup(path string) (group string) {
 	return group
 }
 
-// 获取路由信息
-func walkToGetRoute(path, getGroup string) {
-	// 解析 Go 文件
-	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
-	if err != nil {
-		log.Fatal(err)
+// 递归检查是否存在Group调用
+func findGroupPath(expr ast.Expr) (string, bool) {
+	switch e := expr.(type) {
+	case *ast.CallExpr:
+		if sel, ok := e.Fun.(*ast.SelectorExpr); ok {
+			if sel.Sel.Name == "Group" {
+				if len(e.Args) != 1 {
+					return "", false
+				}
+				lit, ok := e.Args[0].(*ast.BasicLit)
+				if !ok || lit.Kind != token.STRING {
+					return "", false
+				}
+				return strings.Trim(lit.Value, `"`), true
+			}
+			// 递归检查X部分是否存在Group调用
+			if path, ok := findGroupPath(sel.X); ok {
+				return path, true
+			}
+		}
+		return findGroupPath(e.Fun)
+	case *ast.SelectorExpr:
+		return findGroupPath(e.X)
+	default:
+		return "", false
 	}
+}
+
+func ParseRoutes(filePath, getGroup string) []*Route {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
+	if err != nil {
+		log.Fatalf("Failed to parse file: %v", err)
+	}
+
+	vars := make(map[string]string) // 变量名到Group路径的映射
+
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch x := n.(type) {
+		case *ast.AssignStmt:
+			// 处理变量定义，例如 groupV1 := ...
+			if x.Tok != token.DEFINE {
+				return true
+			}
+			if len(x.Lhs) != 1 || len(x.Rhs) != 1 {
+				return true
+			}
+			lhsIdent, ok := x.Lhs[0].(*ast.Ident)
+			if !ok {
+				return true
+			}
+			// 查找Group路径
+			groupPath, ok := findGroupPath(x.Rhs[0])
+			if ok {
+				vars[lhsIdent.Name] = groupPath
+			}
+
 		case *ast.CallExpr:
-			if sel, ok := x.Fun.(*ast.SelectorExpr); ok {
-				if sel.Sel.Name == "GET" || sel.Sel.Name == "POST" || sel.Sel.Name == "PUT" || sel.Sel.Name == "DELETE" {
-					method := sel.Sel.Name
-					path_ := x.Args[0].(*ast.BasicLit).Value
-					handler := ""
-					if val, ok := x.Args[1].(*ast.SelectorExpr); ok {
-						handler = val.Sel.Name
+			// 处理HTTP方法调用，如GET、POST
+			selExpr, ok := x.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return true
+			}
+			method := selExpr.Sel.Name
+			if !isHTTPMethod(method) {
+				return true
+			}
+			// 获取接收者变量名
+			receiver, ok := selExpr.X.(*ast.Ident)
+			if !ok {
+				return true
+			}
+			varName := receiver.Name
+			groupPath, exists := vars[varName]
+			if !exists {
+				return true
+			}
+			// 提取路径
+			if len(x.Args) < 1 {
+				return true
+			}
+			pathLit, ok := x.Args[0].(*ast.BasicLit)
+			if !ok || pathLit.Kind != token.STRING {
+				return true
+			}
+			path := strings.Trim(pathLit.Value, `"`)
+			// 提取处理函数
+			var handler string
+			if len(x.Args) >= 2 {
+				switch arg := x.Args[1].(type) {
+				case *ast.SelectorExpr:
+					handler = arg.Sel.Name
+				case *ast.Ident:
+					if arg.Name == "nil" {
+						handler = "" // 处理nil情况
 					} else {
-						handler = x.Args[1].(*ast.Ident).Name
+						handler = arg.Name
 					}
-					routes = append(routes, &Route{Method: method, Path: path_, Handler: handler, Group: getGroup})
+				default:
+					handler = ""
 				}
 			}
-		case *ast.TypeSpec:
-
-		default:
-
+			routes = append(routes, &Route{
+				Method:    method,
+				Path:      path,
+				Handler:   handler,
+				Group:     groupPath,
+				GroupName: getGroup,
+			})
 		}
 		return true
 	})
+
+	return routes
+}
+
+// 判断是否为HTTP方法
+func isHTTPMethod(method string) bool {
+	switch method {
+	case "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS":
+		return true
+	default:
+		return false
+	}
 }
 
 func generateOpenAPIDoc() string {
@@ -226,7 +320,7 @@ func generateOpenAPIDoc() string {
 	}
 
 	for _, route := range routes {
-		path := strings.Trim(route.Path, `"`)
+		path := route.Group + strings.Trim(route.Path, `"`)
 		if strings.Contains(path, "/:id") {
 			path = strings.ReplaceAll(path, "/:id", "/{id}")
 		}
@@ -237,7 +331,7 @@ func generateOpenAPIDoc() string {
 		var operation = Operation{
 			Summary:     fmt.Sprintf("%s %s", route.Method, path),
 			Description: fmt.Sprintf("Handler function is %s", route.Handler),
-			Tags:        []string{route.Group},
+			Tags:        []string{route.GroupName},
 			Parameters:  make([]Parameter, 0),
 			Responses: map[string]Response{
 				"200": {
@@ -323,6 +417,7 @@ func generateOpenAPIDoc() string {
 					},
 				},
 			}
+			// 判断是否包含id
 			if strings.Contains(route.Path, "/:id") {
 				operation.Parameters = append(operation.Parameters, Parameter{
 					Name:        "id",
