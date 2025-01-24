@@ -320,7 +320,19 @@ func generateOpenAPIDoc() string {
 	}
 
 	for _, route := range routes {
-		path := route.Group + strings.Trim(route.Path, `"`)
+		if !strings.HasPrefix(route.Group, "/") {
+			route.Group = fmt.Sprintf("%s%s", "/", route.Group)
+		}
+		if strings.HasSuffix(route.Group, "/") {
+			route.Group = strings.TrimSuffix(route.Group, "/")
+		}
+
+		route.Path = strings.Trim(route.Path, `"`)
+		if !strings.HasPrefix(route.Path, "/") {
+			route.Path = fmt.Sprintf("%s%s", "/", route.Path)
+		}
+
+		path := route.Group + route.Path
 		if strings.Contains(path, "/:id") {
 			path = strings.ReplaceAll(path, "/:id", "/{id}")
 		}
