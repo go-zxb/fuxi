@@ -3,6 +3,7 @@ package data
 import (
 	"errors"
 	"fmt"
+	"gorm.io/driver/sqlite" // Sqlite driver based on CGO
 	"{{.ModuleName}}/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm/logger"
@@ -75,4 +76,22 @@ func InitMysql(conf config.Config) (*gorm.DB, error) {
 
 func initDatabase(db *gorm.DB) {
 
+}
+
+
+func InitSQLite(conf config.Config) (*gorm.DB, error) {
+	gormDB, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	err = gormDB.AutoMigrate()
+  	if err != nil {
+  		fmt.Println("MySQL AutoMigrate error", err.Error())
+  		return nil, err
+  	}
+    initDatabase(gormDB)
+
+
+    db = gormDB
+  	return db, nil
 }
