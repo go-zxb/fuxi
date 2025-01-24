@@ -12,7 +12,7 @@ import (
 
 type ApiRepo struct {
 	rdb    *data.Redis
-	casbin casbinService.ICasbinRepoInterface
+	casbin casbinService.CasbinRepoInterface
 	query  *query.Query
 }
 

@@ -18,13 +18,13 @@ type {{.StructName | initialLetter}}ApiInterface interface {
 }
 
 type {{.StructName | initialLetter}}Router struct {
-	engine *gin.Engine
+	engine *gin.RouterGroup
 	api    {{.StructName | initialLetter}}ApiInterface
 	enforcer *casbin.CachedEnforcer
 }
 
 
-func New{{.StructName | initialLetter}}Router(engine *gin.Engine,enforcer *casbin.CachedEnforcer) *{{.StructName | initialLetter}}Router {
+func New{{.StructName | initialLetter}}Router(engine *gin.RouterGroup,enforcer *casbin.CachedEnforcer) *{{.StructName | initialLetter}}Router {
 	return &{{.StructName | initialLetter}}Router{
 		engine: engine,
 		enforcer: enforcer,
@@ -40,7 +40,7 @@ func New{{.StructName | initialLetter}}Router(engine *gin.Engine,enforcer *casbi
 func (r *{{.StructName | initialLetter}}Router) Init{{.StructName | initialLetter}}Router() {
 {
     //v1
-    groupV1:= r.engine.Group("api/v1")
+    groupV1:= r.engine.Group("")
     authGroupV1 := r.engine.Group("api/v1").Use(middleware.Casbin(r.enforcer))
     groupV1.GET("/{{.StructName}}s", r.api.Get{{.StructName | initialLetter}}List)
     groupV1.GET("/{{.StructName}}s/:id", r.api.Get{{.StructName | initialLetter}})

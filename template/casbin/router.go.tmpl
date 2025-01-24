@@ -15,12 +15,12 @@ type CasbinApiInterface interface {
 }
 
 type CasbinRouter struct {
-	engine   *gin.Engine
+	engine   *gin.RouterGroup
 	api      CasbinApiInterface
 	enforcer *casbin.CachedEnforcer
 }
 
-func NewCasbinRouter(engine *gin.Engine, enforcer *casbin.CachedEnforcer) *CasbinRouter {
+func NewCasbinRouter(engine *gin.RouterGroup, enforcer *casbin.CachedEnforcer) *CasbinRouter {
 	return &CasbinRouter{
 		engine:   engine,
 		enforcer: enforcer,
@@ -36,9 +36,9 @@ func NewCasbinRouter(engine *gin.Engine, enforcer *casbin.CachedEnforcer) *Casbi
 func (r *CasbinRouter) InitCasbinRouter() {
 	{
 		// v1
-		groupV1 := r.engine.Group("api/v1/sys").Use(middleware.JwtAuth(), middleware.Casbin(r.enforcer))
-		groupV1.PUT("/casbins", r.api.Update)
-		groupV1.GET("/casbins", r.api.AuthApiList)
+		groupV1 := r.engine.Group("sys").Use(middleware.JwtAuth(), middleware.Casbin(r.enforcer))
+		groupV1.PUT("casbins", r.api.Update)
+		groupV1.GET("casbins", r.api.AuthApiList)
 
 	}
 }

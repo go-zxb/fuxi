@@ -16,12 +16,12 @@ type {{.StructName}}ApiInterface interface {
 }
 
 type {{.StructName}}Router struct {
-	engine *gin.Engine
+	engine *gin.RouterGroup
 	api    {{.StructName}}ApiInterface
 	enforcer *casbin.CachedEnforcer
 }
 
-func New{{.StructName}}Router(engine *gin.Engine,enforcer *casbin.CachedEnforcer) *{{.StructName}}Router {
+func New{{.StructName}}Router(engine *gin.RouterGroup,enforcer *casbin.CachedEnforcer) *{{.StructName}}Router {
 	return &{{.StructName}}Router{
 		engine: engine,
 		enforcer: enforcer,
@@ -32,8 +32,8 @@ func New{{.StructName}}Router(engine *gin.Engine,enforcer *casbin.CachedEnforcer
 // Init{{.StructName}}Router 初始化{{.StructName}}路由
 func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
 	{
-		groupV1 := r.engine.Group("api/v1/sys")
-    authGroupV1 := r.engine.Group("api/v1/sys").Use(middleware.JwtAuth())
+		groupV1 := r.engine.Group("sys")
+    authGroupV1 := r.engine.Group("/api/v1/sys").Use(middleware.JwtAuth())
     groupV1.POST("users/login", r.api.Login)
     authGroupV1.GET("users/info", r.api.GetSelfInfo)
     groupV1.POST("users/register", r.api.Register)

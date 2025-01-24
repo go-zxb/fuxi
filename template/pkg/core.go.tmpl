@@ -69,7 +69,7 @@ type GinServer struct {
 func (d *GinServer) initGinServer()  {
 	engine := gin.Default()
 	engine.Use(middleware.Cors())
-	InitRouter(engine)
+	InitRouter(engine.Group("api/v1"))
 	engine.GET("/openapi/*any", ginSwag.WrapHandler(swagFiles.Handler))
   go func() {
       time.Sleep(time.Millisecond * 500)
@@ -106,7 +106,7 @@ func (d *GinServer) initGinServer()  {
     	log.Println("服务已退出")
 }
 
-func InitRouter(engine *gin.Engine) {
+func InitRouter(engine *gin.RouterGroup) {
 
 }
 
