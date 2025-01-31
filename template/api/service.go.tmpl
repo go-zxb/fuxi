@@ -12,6 +12,8 @@ import (
 	apiModel "{{.ModuleName}}/internal/model/system/api"
 	"{{.ModuleName}}/internal/model/system/api/query"
 	casbinModel "{{.ModuleName}}/internal/model/system/casbin"
+	logx "{{.ModuleName}}/log"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +31,7 @@ type ApiService struct {
 	repo IApiRepo
 	rdb  *data.Redis
 	conf *config.Config
+	log  *zap.SugaredLogger
 }
 
 func NewApiService(repo IApiRepo) *ApiService {
@@ -36,6 +39,7 @@ func NewApiService(repo IApiRepo) *ApiService {
 		repo: repo,
 		rdb:  data.GetRedis(),
 		conf: config.GetConfig(),
+		log:  logx.InitLogger(),
 	}
 }
 

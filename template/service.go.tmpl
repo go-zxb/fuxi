@@ -5,6 +5,8 @@ import (
   "gorm.io/gen"
 	"{{.ModuleName}}/core/data"
 	"{{.ModuleName}}/config"
+	logx "{{.ModuleName}}/log"
+  "go.uber.org/zap"
   model "{{.ModuleName}}/internal/model/{{.StructName}}"
 )
 
@@ -21,6 +23,7 @@ type {{.StructName | initialLetter}}Service struct {
 	repo {{.StructName | initialLetter}}RepoInterface
 	rdb  *data.Redis
 	conf *config.Config
+	log  *zap.SugaredLogger
 }
 
 func New{{.StructName | initialLetter}}Service(repo {{.StructName | initialLetter}}RepoInterface) *{{.StructName | initialLetter}}Service {
@@ -28,6 +31,7 @@ func New{{.StructName | initialLetter}}Service(repo {{.StructName | initialLette
 		repo: repo,
 		rdb: data.GetRedis(),
 		conf: config.GetConfig(),
+		log:  logx.InitLogger(),
 	}
 }
 

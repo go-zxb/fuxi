@@ -84,6 +84,7 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	addProjectCodePath("jwt.go", "pkg/jwt", "jwt", ".go")
 	addProjectCodePath("middlewareJwt.go", "middleware", "jwt", ".go")
 	addProjectCodePath("modelBase.go", "internal/model/base", "base", ".go")
+	addProjectCodePath("log.go", "log", "log", ".go")
 	addProjectCodePath("README.md", "", "README", ".md")
 
 	infoChan <- pkg.CommandInfo{Message: "🐮🐴正在复制go基础文件....", Error: nil}

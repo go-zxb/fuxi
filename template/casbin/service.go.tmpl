@@ -9,6 +9,8 @@ import (
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"{{.ModuleName}}/core/data"
 	model "{{.ModuleName}}/internal/model/system/casbin"
+	logx "{{.ModuleName}}/log"
+  "go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -40,12 +42,14 @@ type CasbinService struct {
 	repo     CasbinRepoInterface
 	enforcer *casbin.CachedEnforcer
 	rdb      *data.Redis
+	log  *zap.SugaredLogger
 }
 
 func NewCasbinService(repo CasbinRepoInterface) *CasbinService {
 	s := &CasbinService{
 		repo: repo,
 		rdb:  data.GetRedis(),
+		log:  logx.InitLogger(),
 	}
 	_ = s.InitCasbinRoleRule()
 	return s
