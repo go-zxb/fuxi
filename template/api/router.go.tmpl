@@ -37,8 +37,7 @@ func (r *ApiRouter) InitApiRouter() {
 	{
 		// v1
 		// groupV1 := r.engine.Group("sys")
-		authGroupV1 := r.engine.Group("/sys/").Use(middleware.JwtAuth())
-		authGroupV1.DELETE("apis", nil)
+		authGroupV1 := r.engine.Group("sys").Use(middleware.JwtAuth())
 		authGroupV1.PUT("apis", r.api.UpdateApi)
 		authGroupV1.POST("apis", r.api.CreateApi)
 		authGroupV1.GET("apis/list", r.api.GetApiList)
