@@ -1,0 +1,26 @@
+// Package model 角色用于管理系统中的不同角色及其权限。
+package model
+
+import "{{.ModuleName}}/internal/model/base"
+
+type Role struct {
+	base.Model
+	Status      int    `json:"status" gorm:"type:int;column:status;comment:状态"`
+	RoleName    string `json:"roleName" gorm:"type:varchar(255);column:role_name;comment:角色名称"`
+	RoleCode    string `json:"roleCode" gorm:"type:varchar(255);column:role_code;comment:角色编码"`
+	Description string `json:"description" gorm:"type:text;column:description;comment:角色描述"`
+}
+
+func (Role) TableName() string {
+	return "roles"
+}
+
+type RoleQuery struct {
+	base.Model
+	Page     int    `form:"page" json:"page"`
+	Total    int    `form:"total" json:"total"`
+	PageSize int    `form:"pageSize" json:"pageSize"`
+	Status   int    `form:"status" json:"status"`
+	RoleName string `form:"roleName" json:"roleName"`
+	RoleCode string `form:"roleCode" json:"roleCode"`
+}

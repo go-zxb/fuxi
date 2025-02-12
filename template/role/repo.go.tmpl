@@ -1,0 +1,69 @@
+package repo
+
+import (
+	model "{{.ModuleName}}/internal/model/system/role"
+	"{{.ModuleName}}/internal/model/system/role/query"
+	service "{{.ModuleName}}/internal/service/system/role"
+	"gorm.io/gen"
+)
+
+type RoleRepo struct {
+	Q *query.Query
+}
+
+func NewRoleRepo() service.RoleRepoInterface {
+	return &RoleRepo{Q: query.Q}
+}
+
+// CreateRole 创建role
+func (r *RoleRepo) CreateRole(role *model.Role) error {
+	Q := r.Q.Role
+	return Q.Create(role)
+}
+
+// GetRole 获取roleByID
+func (r *RoleRepo) GetRole(id uint) (*model.Role, error) {
+	Q := r.Q.Role
+	return Q.Where(Q.ID.Eq(id)).First()
+}
+
+// GetRoleList 获取role列表
+func (r *RoleRepo) GetRoleList(query *model.RoleQuery) ([]*model.Role, error) {
+	Q := r.Q.Role
+	q := Q.Where()
+
+	if query.Status != 0 {
+		q = q.Where(Q.Status.Eq(query.Status))
+	}
+
+	if query.RoleName != "" {
+		q = q.Where(Q.RoleName.Eq(query.RoleName))
+	}
+
+	if query.RoleCode != "" {
+		q = q.Where(Q.RoleCode.Eq(query.RoleCode))
+	}
+
+	if query.Page <= 0 {
+		query.Page = 1
+	}
+
+	if query.PageSize <= 0 || query.PageSize >= 100 {
+		query.PageSize = 20
+	}
+
+	q = q.Limit(query.PageSize).Offset((query.Page - 1) * query.PageSize)
+	return q.Find()
+}
+
+// UpdateRole 更新role
+func (r *RoleRepo) UpdateRole(role *model.Role) (gen.ResultInfo, error) {
+	Q := r.Q.Role
+	return Q.Where(Q.ID.Eq(role.ID)).Updates(role)
+}
+
+// DeleteRole 删除role
+func (r *RoleRepo) DeleteRole(id uint) (gen.ResultInfo, error) {
+	Q := r.Q.Role
+	return Q.Where(Q.ID.Eq(id)).Delete()
+}

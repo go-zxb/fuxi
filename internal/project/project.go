@@ -214,17 +214,16 @@ func handleGenProjectCode(infoChan chan<- pkg.CommandInfo) {
 	infoChan <- pkg.CommandInfo{Message: "🎁٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 正在创建相关模块文件...", Error: nil}
 
 	err := pkg.RunCommand("fuxi", "create:casbin")
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = pkg.RunCommand("fuxi", "create:user")
-	if err != nil {
-		fmt.Println(err)
-	}
+	infoChan <- pkg.CommandInfo{Message: "✅ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 生成casbin代码成功...", Error: err}
+
+	err = pkg.RunCommand("fuxi", "create:user", "-i", "true", "-s", "User")
+	infoChan <- pkg.CommandInfo{Message: "✅ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 生成user代码成功...", Error: err}
+
 	err = pkg.RunCommand("fuxi", "create:apis")
-	if err != nil {
-		fmt.Println(err)
-	}
+	infoChan <- pkg.CommandInfo{Message: "✅ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 生成apis代码成功...", Error: err}
+
+	err = pkg.RunCommand("fuxi", "create:role")
+	infoChan <- pkg.CommandInfo{Message: "✅ ٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ 生成role代码成功...", Error: err}
 
 	_ = pkg.RunCommandNoOutput("fuxi", "openapi")
 	infoChan <- pkg.CommandInfo{Message: fmt.Sprintf("✅ 创建 %s 项目成功", projectName), Error: nil}

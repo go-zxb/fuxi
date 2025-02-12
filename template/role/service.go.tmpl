@@ -1,0 +1,70 @@
+package service
+
+import (
+	"errors"
+	"{{.ModuleName}}/config"
+	"{{.ModuleName}}/core/data"
+	model "{{.ModuleName}}/internal/model/system/role"
+	logx "{{.ModuleName}}/log"
+	"go.uber.org/zap"
+	"gorm.io/gen"
+)
+
+// RoleRepoInterface repo依赖倒置接口
+type RoleRepoInterface interface {
+	GetRoleList(query *model.RoleQuery) ([]*model.Role, error)
+	GetRole(id uint) (*model.Role, error)
+	CreateRole(role *model.Role) error
+	UpdateRole(role *model.Role) (gen.ResultInfo, error)
+	DeleteRole(id uint) (gen.ResultInfo, error)
+}
+
+type RoleService struct {
+	repo RoleRepoInterface
+	rdb  *data.Redis
+	conf *config.Config
+	log  *zap.SugaredLogger
+}
+
+func NewRoleService(repo RoleRepoInterface) *RoleService {
+	return &RoleService{
+		repo: repo,
+		rdb:  data.GetRedis(),
+		conf: config.GetConfig(),
+		log:  logx.InitLogger(),
+	}
+}
+
+// CreateRole 创建role
+func (s *RoleService) CreateRole(role *model.Role) error {
+	return s.repo.CreateRole(role)
+}
+
+// UpdateRole 更新role
+func (s *RoleService) UpdateRole(role *model.Role) error {
+	_, err := s.repo.UpdateRole(role)
+	return err
+}
+
+// GetRole 获取roleByID
+func (s *RoleService) GetRole(id uint) (*model.Role, error) {
+	return s.repo.GetRole(id)
+}
+
+// GetRoleList 获取role列表
+func (s *RoleService) GetRoleList(query *model.RoleQuery) ([]*model.Role, error) {
+	roles, err := s.repo.GetRoleList(query)
+	if err != nil {
+		return nil, err
+	}
+	if len(roles) == 0 {
+		return nil, errors.New("no role found")
+	}
+	return roles, nil
+}
+
+// DeleteRole 删除role
+func (s *RoleService) DeleteRole(id uint) error {
+	_, err := s.repo.DeleteRole(id)
+	return err
+}

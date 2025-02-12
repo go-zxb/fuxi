@@ -1,0 +1,50 @@
+package router
+
+import (
+	"github.com/casbin/casbin/v2"
+	"github.com/gin-gonic/gin"
+	api "{{.ModuleName}}/internal/api/system/role"
+	repo "{{.ModuleName}}/internal/repo/system/role"
+	service "{{.ModuleName}}/internal/service/system/role"
+	"{{.ModuleName}}/middleware"
+)
+
+type RoleApiInterface interface {
+	GetRoleList(ctx *gin.Context)
+	GetRole(ctx *gin.Context)
+	CreateRole(ctx *gin.Context)
+	UpdateRole(ctx *gin.Context)
+	DeleteRole(ctx *gin.Context)
+}
+
+type RoleRouter struct {
+	engine   *gin.RouterGroup
+	api      RoleApiInterface
+	enforcer *casbin.CachedEnforcer
+}
+
+func NewRoleRouter(engine *gin.RouterGroup, enforcer *casbin.CachedEnforcer) *RoleRouter {
+	return &RoleRouter{
+		engine:   engine,
+		enforcer: enforcer,
+		api: api.NewRoleApi(
+			service.NewRoleService(
+				repo.NewRoleRepo(),
+			),
+		),
+	}
+}
+
+// InitRoleRouter 初始化Role路由
+func (r *RoleRouter) InitRoleRouter() {
+	{
+		// v1
+		// groupV1 := r.engine.Group("sys")
+		authGroupV1 := r.engine.Group("sys").Use(middleware.JwtAuth())
+		authGroupV1.GET("/roles/list", r.api.GetRoleList)
+		authGroupV1.GET("/roles", r.api.GetRole)
+		authGroupV1.POST("/roles", r.api.CreateRole)
+		authGroupV1.PUT("/roles", r.api.UpdateRole)
+		authGroupV1.DELETE("/roles", r.api.DeleteRole)
+	}
+}

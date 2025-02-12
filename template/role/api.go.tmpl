@@ -1,0 +1,101 @@
+package api
+
+import (
+	"github.com/gin-gonic/gin"
+	model "{{.ModuleName}}/internal/model/system/role"
+	service "{{.ModuleName}}/internal/service/system/role"
+	"{{.ModuleName}}/pkg/response"
+	"{{.ModuleName}}/pkg/strconv"
+)
+
+type RoleApi struct {
+	reply response.IResponse
+	sv    *service.RoleService
+}
+
+func NewRoleApi(sv *service.RoleService) *RoleApi {
+	return &RoleApi{reply: response.New(), sv: sv}
+}
+
+// CreateRole 创建role
+// @model model.Role
+// @auth true
+func (a *RoleApi) CreateRole(ctx *gin.Context) {
+	var oo model.Role
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err := a.sv.CreateRole(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("成功").Success(ctx)
+}
+
+// UpdateRole  更新role
+// @model model.Role
+// @auth true
+func (a *RoleApi) UpdateRole(ctx *gin.Context) {
+	var oo model.Role
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err := a.sv.UpdateRole(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("成功").Success(ctx)
+}
+
+// GetRole 获取roleByID
+// @auth true
+func (a *RoleApi) GetRole(ctx *gin.Context) {
+	id := strconvx.StringToUint(ctx.Query("id"))
+	if id == 0 {
+		a.reply.New().WithCode(400).WithMessage("id not found").Fail(ctx)
+		return
+	}
+	list, err := a.sv.GetRole(id)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("成功").WithData(list).Success(ctx)
+}
+
+// GetRoleList  获取role列表
+// @model model.RoleQuery
+// @auth true
+func (a *RoleApi) GetRoleList(ctx *gin.Context) {
+	var oo model.RoleQuery
+	if err := ctx.ShouldBindQuery(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	list, err := a.sv.GetRoleList(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("成功").WithData(list).Success(ctx)
+}
+
+// DeleteRole 删除role
+// @auth true
+func (a *RoleApi) DeleteRole(ctx *gin.Context) {
+	id := strconvx.StringToUint(ctx.Query("id"))
+	if id == 0 {
+		a.reply.New().WithCode(400).WithMessage("id not found").Fail(ctx)
+		return
+	}
+	err := a.sv.DeleteRole(id)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("删除成功").Success(ctx)
+}

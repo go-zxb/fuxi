@@ -15,14 +15,10 @@ import (
 
 var (
 	excludePaths []string
-	output       string
-	osType       string
 )
 
 func init() {
 	runCmd.PersistentFlags().StringSliceVarP(&excludePaths, "exclude", "e", []string{}, "需要排除监听的go文件目录")
-	buildGoCmd.PersistentFlags().StringVarP(&output, "output", "o", "", "输出目录")
-	buildGoCmd.PersistentFlags().StringVarP(&osType, "osType", "t", "win", "编译平台")
 }
 
 var rootCmd = &cobra.Command{
@@ -64,32 +60,6 @@ var runCmd = &cobra.Command{
 	},
 }
 
-var buildGoCmd = &cobra.Command{
-	Use:   "build:go",
-	Short: "运行go build -ldflags=\"-s -w\"",
-	Long:  "运行go build -ldflags=\"-s -w\"",
-	Run: func(cmd *cobra.Command, args []string) {
-		err := pkg.RunCommand("go", "build", `-ldflags=-s -w`, `-o`, output)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Println("✅ run success 👌")
-	},
-}
-
-var buildFlutterCmd = &cobra.Command{
-	Use:   "build:flt",
-	Short: "运行flutter build windows ",
-	Long:  "运行flutter build windows ",
-	Run: func(cmd *cobra.Command, args []string) {
-		err := pkg.RunCommand("flutter", "build", `windows`)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Println("✅ run success 👌")
-	},
-}
-
 func init() {
 	path, _ := os.Getwd()
 	log.Println("💻 当前运行目录:", path)
@@ -112,11 +82,10 @@ func init() {
 	rootCmd.AddCommand(project.NewSysUserCmd)
 	rootCmd.AddCommand(project.NewCasbinCmd)
 	rootCmd.AddCommand(project.NewApisCmd)
+	rootCmd.AddCommand(project.NewRoleCmd)
 	rootCmd.AddCommand(openapi.OpenapiCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(genCmd)
-	rootCmd.AddCommand(buildGoCmd)
-	rootCmd.AddCommand(buildFlutterCmd)
 }
 
 func main() {
