@@ -39,13 +39,13 @@ func New{{.StructName | initialLetter}}Router(engine *gin.RouterGroup,enforcer *
 // Init{{.StructName | initialLetter}}Router 初始化{{.StructName | initialLetter}}路由
 func (r *{{.StructName | initialLetter}}Router) Init{{.StructName | initialLetter}}Router() {
 {
-    //v1
-    groupV1:= r.engine.Group("")
-    authGroupV1 := r.engine.Group("api/v1").Use(middleware.Casbin(r.enforcer))
-    groupV1.GET("/{{.StructName}}s", r.api.Get{{.StructName | initialLetter}}List)
-    groupV1.GET("/{{.StructName}}s/:id", r.api.Get{{.StructName | initialLetter}})
-    authGroupV1.POST("/{{.StructName}}s", r.api.Create{{.StructName | initialLetter}})
-    authGroupV1.PUT("/{{.StructName}}s", r.api.Update{{.StructName | initialLetter}})
-    authGroupV1.DELETE("/{{.StructName}}s/:id", r.api.Delete{{.StructName | initialLetter}})
+    // v1
+    // groupV1:= r.engine.Group("")
+    authGroupV1 := r.engine.Group("").Use(middleware.Casbin(r.enforcer))
+    authGroupV1.GET("{{.StructName}}s", r.api.Get{{.StructName | initialLetter}}List)
+    authGroupV1.GET("{{.StructName}}s/:id", r.api.Get{{.StructName | initialLetter}})
+    authGroupV1.POST("{{.StructName}}s", r.api.Create{{.StructName | initialLetter}})
+    authGroupV1.PUT("{{.StructName}}s", r.api.Update{{.StructName | initialLetter}})
+    authGroupV1.DELETE("{{.StructName}}s/:id", r.api.Delete{{.StructName | initialLetter}})
 }
 }

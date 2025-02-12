@@ -9,6 +9,7 @@ import (
 	"{{.ModuleName}}/pkg/encrypt"
 	 "{{.ModuleName}}/pkg/jwt"
 	"gorm.io/gorm"
+	"gorm.io/gen"
 	logx "{{.ModuleName}}/log"
   "go.uber.org/zap"
 )
@@ -19,6 +20,9 @@ type {{.StructName}}RepoInterface interface {
 	GetSelfInfo(uid string) (*model.{{.StructName}}, error)
 	Login(u *model.Login) (*model.{{.StructName}}, error)
 	Register(u *model.{{.StructName}}) error
+	GetUserList() ([]*model.{{.StructName}}, error)
+  EditUserInfo(sysUser *model.{{.StructName}}) (gen.ResultInfo, error)
+  DeleteUser(id uint) (gen.ResultInfo, error)
 }
 
 type {{.StructName}}Service struct {
@@ -80,4 +84,18 @@ func (s *{{.StructName}}Service) Register(u *model.{{.StructName}}) error {
 
 func (s *{{.StructName}}Service) GetSelfInfo(uid string) (*model.{{.StructName}}, error) {
 	return s.repo.GetSelfInfo(uid)
+}
+
+func (s *{{.StructName}}Service) GetUserList() ([]*model.{{.StructName}}, error) {
+	return s.repo.GetUserList()
+}
+
+func (s *{{.StructName}}Service) EditUserInfo(user *model.{{.StructName}}) error {
+	_, err := s.repo.EditUserInfo(user)
+	return err
+}
+
+func (s *UserService) DeleteUser(id uint) error {
+	_, err := s.repo.DeleteUser(id)
+	return err
 }

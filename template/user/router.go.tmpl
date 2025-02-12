@@ -13,6 +13,9 @@ type {{.StructName}}ApiInterface interface {
 	GetSelfInfo(ctx *gin.Context)
 	Login(ctx *gin.Context)
 	Register(ctx *gin.Context)
+	GetUserList(ctx *gin.Context)
+  EditUserInfo(ctx *gin.Context)
+  DeleteUser(ctx *gin.Context)
 }
 
 type {{.StructName}}Router struct {
@@ -33,11 +36,12 @@ func New{{.StructName}}Router(engine *gin.RouterGroup,enforcer *casbin.CachedEnf
 func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
 	{
 		groupV1 := r.engine.Group("sys")
-    authGroupV1 := r.engine.Group("/api/v1/sys").Use(middleware.JwtAuth())
+    authGroupV1 := r.engine.Group("sys").Use(middleware.JwtAuth())
     groupV1.POST("users/login", r.api.Login)
     authGroupV1.GET("users/info", r.api.GetSelfInfo)
     groupV1.POST("users/register", r.api.Register)
-    authGroupV1.DELETE("users/", nil)
-
+		groupV1.GET("users/list", r.api.GetUserList)
+		groupV1.PUT("users/editUserInfo", r.api.EditUserInfo)
+		groupV1.DELETE("users/deleteUser", r.api.DeleteUser)
 	}
 }

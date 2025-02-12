@@ -31,7 +31,7 @@ func (a *{{.StructName | initialLetter}}Api) Create{{.StructName | initialLetter
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+	a.reply.New().WithMessage("成功").Success(ctx)
 }
 
 // Update{{.StructName | initialLetter}}  更新{{.StructName}}
@@ -48,7 +48,7 @@ func (a *{{.StructName | initialLetter}}Api) Update{{.StructName | initialLetter
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+	a.reply.New().WithMessage("成功").Success(ctx)
 }
 
 // Get{{.StructName | initialLetter}} 获取{{.StructName}}ByID
@@ -64,7 +64,7 @@ func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}(
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+	a.reply.New().WithMessage("成功").WithData(list).Success(ctx)
 }
 
 // Get{{.StructName | initialLetter}}List  获取{{.StructName}}列表
@@ -81,7 +81,7 @@ func (a *{{.StructName | initialLetter}}Api) Get{{.StructName | initialLetter}}L
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+	a.reply.New().WithMessage("成功").WithData(list).Success(ctx)
 }
 
 // Delete{{.StructName | initialLetter}} 删除{{.StructName}}
@@ -97,5 +97,5 @@ func (a *{{.StructName | initialLetter}}Api) Delete{{.StructName | initialLetter
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("删除成功").Success(ctx)
+	a.reply.New().WithMessage("删除成功").Success(ctx)
 }

@@ -23,7 +23,7 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 package main
 func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc) + `() {
 	Q := r.Q.` + pkg.InitialLetter(a.Name) + `
-	return Q.Where(Q.ID.Eq(user.ID)).Updates(` + a.Name + `)
+	return Q.Where(Q.ID.Eq(` + pkg.InitialLetter(a.Name) + `.ID)).Updates(` + a.Name + `)
 }
 `
 
@@ -129,7 +129,7 @@ func (r *` + pkg.InitialLetter(a.Name) + `Repo) ` + pkg.InitialLetter(a.ApiFunc)
 
 			}
 		} else {
-			//入参Query对象 可包含更多查询字段
+			// 入参Query对象 可包含更多查询字段
 			if a.NoParams {
 				a.funcType = base.QueryNoParams(a.IsReturnList, a.Name, a.ReturnType)
 				if a.IsReturnList {

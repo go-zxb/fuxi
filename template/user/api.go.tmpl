@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"{{.ModuleName}}/internal/model/{{.FilePath}}"
 	service "{{.ModuleName}}/internal/service/{{.FilePath}}"
+	strconvx "{{.ModuleName}}/pkg/strconv"
 	"{{.ModuleName}}/pkg/response"
 )
 
@@ -58,4 +59,40 @@ func (a *{{.StructName}}Api) Register(ctx *gin.Context) {
 		return
 	}
 	a.reply.New().WithMessage("成功").Success(ctx)
+}
+
+func (a *{{.StructName}}Api) GetUserList(ctx *gin.Context) {
+	resp, err := a.sv.GetUserList()
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("成功").WithData(resp).Success(ctx)
+}
+func (a *{{.StructName}}Api) EditUserInfo(ctx *gin.Context) {
+	var oo model.{{.StructName}}
+	if err := ctx.ShouldBindJSON(&oo); err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	err := a.sv.EditUserInfo(&oo)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("成功").Success(ctx)
+}
+
+func (a *{{.StructName}}Api) DeleteUser(ctx *gin.Context) {
+	id := strconvx.StringToUint(ctx.Query("id"))
+	if id == 0 {
+		a.reply.New().WithCode(400).WithMessage("id not found").Fail(ctx)
+		return
+	}
+	err := a.sv.DeleteUser(id)
+	if err != nil {
+		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
+		return
+	}
+	a.reply.New().WithMessage("删除成功").Success(ctx)
 }

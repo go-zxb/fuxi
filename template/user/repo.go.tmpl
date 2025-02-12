@@ -4,6 +4,7 @@ import (
 	"{{.ModuleName}}/internal/model/{{.FilePath}}"
 	"{{.ModuleName}}/internal/model/{{.FilePath}}/query"
 	service "{{.ModuleName}}/internal/service/{{.FilePath}}"
+	"gorm.io/gen"
 )
 
 type {{.StructName}}Repo struct {
@@ -35,4 +36,20 @@ func (r *{{.StructName}}Repo) Get{{.StructName}}Info(username string) (*model.{{
 	Q := r.Q.{{.StructName}}
 	q := Q.Where(Q.UserName.Eq(username))
 	return q.First()
+}
+
+func (r *{{.StructName}}Repo) GetUserList() ([]*model.{{.StructName}}, error) {
+	Q := r.Q.{{.StructName}}
+	q := Q.Where()
+	return q.Find()
+}
+
+func (r *{{.StructName}}Repo) EditUserInfo(user *model.{{.StructName}}) (gen.ResultInfo, error) {
+	Q := r.Q.{{.StructName}}
+	return Q.Where(Q.ID.Eq(user.ID)).Updates(user)
+}
+
+func (r *{{.StructName}}Repo) DeleteUser(id uint) (gen.ResultInfo, error) {
+	Q := r.Q.{{.StructName}}
+	return Q.Where(Q.ID.Eq(id)).Delete()
 }

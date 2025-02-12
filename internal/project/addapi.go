@@ -105,7 +105,7 @@ var AddApiCmd = &cobra.Command{
 
 func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	defer close(infoChan) // 确保在函数返回时关闭通道
-	if name == "" || method == "" || apiFunc == "" {
+	if args.FileName == "" || method == "" || apiFunc == "" {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴args is empty... 什么? 需要帮助? fuxi api:add -h 可以帮到你!", Error: nil}
 		return
 	}
@@ -120,7 +120,7 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 
 	apiAdd := addapi.AddApi{
 		Name:         name,
-		FilePath:     fmt.Sprintf("%s/%s/%s.go", routerPath, name, name),
+		FilePath:     fmt.Sprintf("%s/%s/%s.go", routerPath, args.FileName, name),
 		Method:       strings.ToUpper(method),
 		Api:          api,
 		ApiFunc:      apiFunc,
@@ -136,8 +136,8 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 获取项目名称错误", Error: err}
 		return
 	}
-	zipFileName := fmt.Sprintf(".fuxi/%s/%s/%sBeforeCode/%s.zip", moduleName, name, apiFunc, time.Now().Format("20060102150405"))
-	err = BeforeCodeToZip(zipFileName, apiAdd.FilePath, fmt.Sprintf("%s/%s/%s.go", apiPath, name, name))
+	zipFileName := fmt.Sprintf(".fuxi/%s/%s/%sBeforeCode/%s.zip", moduleName, args.FileName, apiFunc, time.Now().Format("20060102150405"))
+	err = BeforeCodeToZip(zipFileName, apiAdd.FilePath, fmt.Sprintf("%s/%s/%s.go", apiPath, args.FileName, name))
 	if err != nil {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴🚶‍♀任务中断🚶 因为备份数据失败🎒....", Error: err}
 		return
@@ -150,7 +150,7 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴✅ 添加路由代码成功", Error: err}
 	}
 
-	apiAdd.FilePath = fmt.Sprintf("%s/%s/%s.go", apiPath, name, name)
+	apiAdd.FilePath = fmt.Sprintf("%s/%s/%s.go", apiPath, args.FileName, name)
 	err = apiAdd.InsertApiHandle()
 	if err != nil {
 		infoChan <- pkg.CommandInfo{Message: "🐮🐴❎ 添加ApiHandle代码错误", Error: err}
@@ -160,7 +160,7 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 	// 添加service
 	sv := addService.AddService{
 		Name:         name,
-		FilePath:     fmt.Sprintf("%s/%s/%s.go", servicePath, name, name),
+		FilePath:     fmt.Sprintf("%s/%s/%s.go", servicePath, args.FileName, name),
 		Method:       strings.ToUpper(method),
 		Api:          api,
 		ApiFunc:      apiFunc,
@@ -189,7 +189,7 @@ func addApiHandle(infoChan chan<- pkg.CommandInfo) {
 
 	repo := addRepo.AddRepo{
 		Name:         name,
-		FilePath:     fmt.Sprintf("%s/%s/%s.go", repoPath, name, name),
+		FilePath:     fmt.Sprintf("%s/%s/%s.go", repoPath, args.FileName, name),
 		Method:       strings.ToUpper(method),
 		Api:          api,
 		ApiFunc:      apiFunc,

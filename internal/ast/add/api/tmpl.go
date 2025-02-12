@@ -18,7 +18,7 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+	a.reply.New().WithMessage("成功").Success(ctx)
 }
 `
 
@@ -35,7 +35,7 @@ func (a *UserApi) Tmpl(ctx *gin.Context) {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").Success(ctx)
+	a.reply.New().WithMessage("成功").Success(ctx)
 }
 `
 
@@ -52,7 +52,7 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("删除成功").Success(ctx)
+	a.reply.New().WithMessage("删除成功").Success(ctx)
 }
 `
 
@@ -71,7 +71,7 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").WithData(list).Success(ctx)
+	a.reply.New().WithMessage("成功").WithData(list).Success(ctx)
 }
 `
 
@@ -89,7 +89,7 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").WithData(` + a.Name + `).Success(ctx)
+	a.reply.New().WithMessage("成功").WithData(` + a.Name + `).Success(ctx)
 }
 `
 	queryNoParams := `
@@ -100,7 +100,7 @@ func (a *UserApi) CreateUser(ctx *gin.Context) {
 		a.reply.New().WithCode(400).WithMessage(err.Error()).Fail(ctx)
 		return
 	}
-	a.reply.New().WithCode(200).WithMessage("成功").WithData(resp).Success(ctx)
+	a.reply.New().WithMessage("成功").WithData(resp).Success(ctx)
 }
 `
 

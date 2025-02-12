@@ -28,10 +28,10 @@ type SysUser struct {
 
 var sysUser = &SysUser{
 	ModuleName:  "",
-	StructName:  "SysUser",
-	FileName:    "sysUser",
-	FilePath:    "sysUser",
-	GenFilePath: "sysUser",
+	StructName:  "User",
+	FileName:    "user",
+	FilePath:    "user",
+	GenFilePath: "user",
 }
 
 func init() {
@@ -67,10 +67,8 @@ func cmdHandleSysUser(cmd *cobra.Command, args []string) {
 func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 	defer close(infoChan) // 确保在函数返回时关闭通道
 	if sysUser.isSysUser == "true" {
-		sysUser.FilePath = "system/sysUser"
-		sysUser.GenFilePath = "system/sysUser"
-		sysUser.StructName = "SysUser"
-		sysUser.FileName = "sysUser"
+		sysUser.FilePath = "system/user"
+		sysUser.GenFilePath = "system/user"
 	} else {
 		sysUser.FilePath = sysUser.FileName
 		sysUser.GenFilePath = sysUser.FileName
@@ -190,9 +188,9 @@ func handleGenSysUserCode(infoChan chan<- pkg.CommandInfo) {
 	}
 
 	if isTrue(sysUser.isSysUser) {
-		InsertInitRouterCode(sysUser.ModuleName, "system/", "sysUser")
-		InsertGormGenCode(sysUser.ModuleName, "system/", "sysUser")
-		InsertSetDB(sysUser.ModuleName, "system/", "sysUser")
+		InsertInitRouterCode(sysUser.ModuleName, "system/", "user")
+		InsertGormGenCode(sysUser.ModuleName, "system/", "user")
+		InsertSetDB(sysUser.ModuleName, "system/", "user")
 	} else {
 		InsertInitRouterCode(sysUser.ModuleName, "", sysUser.FilePath)
 		InsertGormGenCode(sysUser.ModuleName, "", sysUser.FilePath)

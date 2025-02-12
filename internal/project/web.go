@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"time"
 
@@ -20,6 +21,8 @@ import (
 	"github.com/go-zxb/fuxi/static"
 	"github.com/spf13/cobra"
 )
+
+var args = &Args{}
 
 var SSEWebCmd = &cobra.Command{
 	Use:   "ui",
@@ -137,6 +140,12 @@ func getModel(ctx *gin.Context) {
 	for _, entry := range entries {
 		if entry.IsDir() {
 			dirs += entry.Name() + ","
+			arr, _ := os.ReadDir(dir + "/" + entry.Name())
+			for _, item := range arr {
+				if item.IsDir() {
+					dirs += entry.Name() + "/" + item.Name() + ","
+				}
+			}
 		}
 	}
 	ctx.JSON(http.StatusOK, gin.H{"data": dirs[:len(dirs)-1]})
@@ -145,7 +154,6 @@ func getModel(ctx *gin.Context) {
 func addApi(ctx *gin.Context) {
 	setHeader(ctx)
 
-	args := &Args{}
 	if err := ctx.ShouldBindQuery(args); err != nil {
 		handleinfo(ctx, pkg.CommandInfo{Message: "Invalid request body"})
 		return
@@ -161,7 +169,7 @@ func addApi(ctx *gin.Context) {
 		return
 	}
 
-	name = args.FileName
+	name = path.Base(args.FileName)
 	apiFunc = args.ApiFunc
 	method = args.Method
 	AddRepo = args.AddRepo
