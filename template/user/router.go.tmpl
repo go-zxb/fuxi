@@ -16,6 +16,7 @@ type {{.StructName}}ApiInterface interface {
 	GetUserList(ctx *gin.Context)
   EditUserInfo(ctx *gin.Context)
   DeleteUser(ctx *gin.Context)
+  Logout(ctx *gin.Context)
 }
 
 type {{.StructName}}Router struct {
@@ -43,5 +44,6 @@ func (r *{{.StructName}}Router) Init{{.StructName}}Router() {
 		groupV1.GET("users/list", r.api.GetUserList)
 		groupV1.PUT("users/editUserInfo", r.api.EditUserInfo)
 		groupV1.DELETE("users/deleteUser", r.api.DeleteUser)
+		groupV1.POST("users/logout", r.api.Logout)
 	}
 }

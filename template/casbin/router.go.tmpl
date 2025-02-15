@@ -27,6 +27,7 @@ func NewCasbinRouter(engine *gin.RouterGroup, enforcer *casbin.CachedEnforcer) *
 		api: api.NewCasbinApi(
 			service.NewCasbinService(
 				repo.NewCasbinRepo(),
+				enforcer,
 			),
 		),
 	}

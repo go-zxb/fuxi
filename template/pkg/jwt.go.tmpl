@@ -15,7 +15,7 @@ type Claims struct {
 	AppID string `json:"appId,omitempty"`
 	Uid   string `json:"uid,omitempty"`
 	Type  uint   `json:"type,omitempty"` // 登录方式
-	Role  string `json:"role,omitempty"`
+	RoleCode  string `json:"roleCode,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -27,7 +27,7 @@ func getSecretKey(secretKey string) []byte {
 func (j Jwt) GenerateToken(uid, role, secretKey string, exp int64) (tokenString string, err error) {
 	claim := Claims{
 		Uid:  uid,
-		Role: role,
+		RoleCode: role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second * time.Duration(exp))), // 过期时间在配置文件设置
 			IssuedAt:  jwt.NewNumericDate(time.Now()),                                       // 签发时间

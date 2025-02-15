@@ -4,17 +4,16 @@ package model
 import (
   "gorm.io/gorm"
   "time"
+  import "{{.ModuleName}}/internal/model/base"
 	{{range .Import}}"{{.}}"
 	{{end}}
 )
 
 type {{.StructName | initialLetter}} struct {
-  ID        uint `json:"id" gorm:"primarykey"`
+  base.Model
   UID        string `json:"uid" gorm:"type:varchar(255);column:uid;comment:uid"`
   {{range .Data}}{{.Name | initialLetter}} {{.StructType}} `json:"{{.StructTag}}" gorm:"type:{{.SqlType}};column:{{.SqlTag}};comment:{{.Description}}"`
-  {{end}}CreatedAt   time.Time      `json:"createdAt" gorm:"type:datetime;column:created_at;comment:用户创建时间"`
-  UpdatedAt   time.Time      `json:"updatedAt" gorm:"type:datetime;column:updated_at;comment:用户信息更新时间"`
-  DeletedAt gorm.DeletedAt `gorm:"index"`
+  {{end}}
 }
 
 func ({{.StructName | initialLetter}}) TableName() string {

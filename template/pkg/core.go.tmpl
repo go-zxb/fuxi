@@ -46,13 +46,13 @@ func (a *App) initConf() *GinServer {
 	if err != nil {
 		log.Fatalln("❎ 初始化配置失败:",err)
 	}
-	//初始化数据库
+	// 初始化数据库
 	_,err = data.InitMysql(*c)
   if err != nil {
     log.Fatalln("❎ 初始化MySQL数据库失败:",err)
   }
   log.Println("✅ 初始化MySQL成功🆗")
-  //初始化redis
+  // 初始化redis
   	_, err = data.InitRedis(*c)
   	if err != nil {
   		log.Fatalln("❎ 初始化redis失败:", err)

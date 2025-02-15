@@ -7,6 +7,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	casbinModel "github.com/casbin/casbin/v2/model"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
+	"{{.ModuleName}}/config"
 	"{{.ModuleName}}/core/data"
 	model "{{.ModuleName}}/internal/model/system/casbin"
 	logx "{{.ModuleName}}/log"
@@ -43,16 +44,22 @@ type CasbinService struct {
 	enforcer *casbin.CachedEnforcer
 	rdb      *data.Redis
 	log  *zap.SugaredLogger
+	conf     *config.Config
 }
 
-func NewCasbinService(repo CasbinRepoInterface) *CasbinService {
-	s := &CasbinService{
-		repo: repo,
-		rdb:  data.GetRedis(),
-		log:  logx.InitLogger(),
-	}
-	_ = s.InitCasbinRoleRule()
-	return s
+func NewCasbinService(repo CasbinRepoInterface, enforcer *casbin.CachedEnforcer) *CasbinService {
+	c := &CasbinService{
+  		repo: repo,
+  		rdb:  data.GetRedis(),
+  		log:  logx.InitLogger(),
+  		conf: config.GetConfig(),
+  		enforcer: enforcer,
+  	}
+  	err := c.InitCasbinRoleRule()
+  	if err != nil {
+  		panic(err)
+  	}
+  	return c
 }
 
 func NewCasbin(db *gorm.DB) *casbin.CachedEnforcer {
@@ -77,26 +84,37 @@ func NewCasbin(db *gorm.DB) *casbin.CachedEnforcer {
 
 // InitCasbinRoleRule 初始化角色默认权限规则
 func (s *CasbinService) InitCasbinRoleRule() error {
-	apiList, _ := s.repo.AuthApiList("admin")
+	defaultAdminRole := s.conf.System.DefaultAdminRole
+  apiList, _ := s.repo.AuthApiList(defaultAdminRole)
 	if len(apiList) > 0 {
 		return nil
 	}
-	defaultAdminRole := "admin"
-	// defaultRole := "user"
 	casbinRule := []*model.Casbin{
 
-		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/casbin", V2: "PUT"},
-		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/casbins", V2: "GET"},
+      // casbin
+      {Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/casbins", V2: "PUT"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/casbins", V2: "GET"},
 
-		// 系统用户
-		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers", V2: "DELETE"},
-		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers/*", V2: "DELETE"},
-		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers/*", V2: "GET"},
-		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sysUsers", V2: "GET"},
+  		// Api
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/apis", V2: "POST"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/apis", V2: "PUT"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/apis", V2: "DELETE"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/apis/list", V2: "GET"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/apis/apiGroups", V2: "GET"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/apis/apiAndPermissions", V2: "GET"},
 
-	}
+  		// 系统用户
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/users", V2: "DELETE"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/users", V2: "GET"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/users/list", V2: "GET"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/users/info", V2: "GET"},
+  		{Ptype: "p", V0: defaultAdminRole, V1: "/api/v1/sys/users/editUserInfo", V2: "PUT"},
+  	}
 
-	return s.repo.Create(casbinRule)
+    if err := s.repo.Create(casbinRule); err != nil {
+        return err
+    }
+  	return s.ReLoadPolicy()
 }
 
 // ReLoadPolicy 重新加载权限数据

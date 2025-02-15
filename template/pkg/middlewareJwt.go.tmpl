@@ -47,7 +47,7 @@ func JwtAuth() gin.HandlerFunc {
 		expired := int64(tokenClaims.ExpiresAt.Time.Sub(time.Now()).Seconds())
 		ctx.Set("exp", expired)
 		ctx.Set("uid", tokenClaims.Uid)
-		ctx.Set("role", tokenClaims.Role)
+		ctx.Set("role", tokenClaims.RoleCode)
 		ctx.Set("token", encrypt.MD5(tokenString))
 		ctx.Next()
 	}

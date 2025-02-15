@@ -4,7 +4,9 @@ import (
 	"errors"
 	"{{.ModuleName}}/config"
 	"{{.ModuleName}}/core/data"
+	"{{.ModuleName}}/internal/model/base"
 	model "{{.ModuleName}}/internal/model/system/role"
+	"{{.ModuleName}}/internal/model/system/role/query"
 	logx "{{.ModuleName}}/log"
 	"go.uber.org/zap"
 	"gorm.io/gen"
@@ -27,12 +29,43 @@ type RoleService struct {
 }
 
 func NewRoleService(repo RoleRepoInterface) *RoleService {
-	return &RoleService{
+	role := &RoleService{
 		repo: repo,
 		rdb:  data.GetRedis(),
 		conf: config.GetConfig(),
 		log:  logx.InitLogger(),
 	}
+	err := role.InitRole()
+	if err != nil {
+		panic(err)
+	}
+	return role
+}
+
+func (s *RoleService) InitRole() error {
+	roles := []*model.Role{
+		{
+			Model:    base.Model{},
+			RoleCode: s.conf.System.DefaultAdminRole,
+			RoleName: "超级管理员",
+		}, {
+			Model:    base.Model{},
+			RoleCode: s.conf.System.DefaultRole,
+			RoleName: "普通用户",
+		},
+	}
+	q := query.Q.Role
+	count, err := q.Count()
+	if err != nil {
+		return err
+	}
+
+	// 有数据则退出 否则就添加
+	if count != 0 {
+		return nil
+	}
+
+	return q.Create(roles...)
 }
 
 // CreateRole 创建role

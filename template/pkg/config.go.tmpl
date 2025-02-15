@@ -40,6 +40,8 @@ type System struct {
 	Name        string `mapstructure:"name" json:"name" yaml:"name"`
 	Version     string `mapstructure:"version" json:"version" yaml:"version"`
 	Description string `mapstructure:"description" json:"description" yaml:"description"`
+	DefaultRole      string `mapstructure:"default_role" json:"default_role" yaml:"default_role"`
+  DefaultAdminRole string `mapstructure:"default_admin_role" json:"default_admin_role" yaml:"default_admin_role"`
 }
 
 type Gin struct {

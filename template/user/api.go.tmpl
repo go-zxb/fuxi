@@ -45,6 +45,15 @@ func (a *{{.StructName}}Api) Login(ctx *gin.Context) {
 	a.reply.WithMessage("登录成功·欢迎回来").WithData(gin.H{"token": token}).Success(ctx)
 }
 
+// Logout
+// @auth true
+func (a *{{.StructName}}Api) Logout(ctx *gin.Context) {
+ /*
+ 	自己处理退出逻辑
+ 	*/
+	a.reply.New().WithMessage("退出成功").Success(ctx)
+}
+
 // Register
 // @model model.Login
 func (a *{{.StructName}}Api) Register(ctx *gin.Context) {
